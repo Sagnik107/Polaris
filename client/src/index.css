@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@theme {
+  --color-polar-950: #020914;
+  --color-polar-900: #041321;
+  --color-polar-850: #061827;
+  --color-polar-800: #082033;
+  --color-polar-750: #0A2940;
+  --color-background: #051422;
+
+  --color-surface: #051422;
+  --color-surface-1: rgba(7, 24, 39, 0.82);
+  --color-surface-2: rgba(8, 30, 48, 0.92);
+  --color-surface-3: rgba(12, 39, 60, 0.96);
+  --color-surface-container: #12212f;
+  --color-surface-container-low: #0e1d2b;
+  --color-surface-container-high: #1d2b3a;
+
+  --color-ice-500: #28A9F5;
+  --color-ice-400: #43B8FF;
+  --color-ice-300: #7BD0FF;
+  --color-ice-200: #B7E7FF;
+
+  --color-aurora-500: #29D6B0;
+  --color-aurora-400: #48E5C3;
+
+  --color-border-default: rgba(130, 190, 225, 0.18);
+  --color-border-strong: rgba(75, 177, 235, 0.42);
+  --color-border-focus: #39B8FF;
+
+  --color-text-primary: #F4F9FF;
+  --color-text-secondary: #A9BDD0;
+  --color-text-muted: #6E8498;
+
+  --color-danger: #FF6678;
+  --color-warning: #F6C85F;
+  --color-success: #31D49A;
+  --color-info: #4CBFFF;
+
+  --font-headline: 'Space Grotesk', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: #051422;
+    color: #F4F9FF;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headline);
+    letter-spacing: -0.01em;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Thin subtle scrollbar from Stitch */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(4, 19, 33, 0.6);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(130, 190, 225, 0.25);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(67, 184, 255, 0.45);
+  }
+}
+
+/* Material Symbols Outlined sizing helper */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Radar Sweep Animation from Stitch */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.radar-beam {
+  animation: radar-sweep 8s linear infinite;
+  transform-origin: center center;
+}
+
+/* Slow ping animation from Stitch */
+@keyframes ping-slow {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+
+.animate-ping-slow {
+  animation: ping-slow 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Glass Card styling from Stitch */
+.polar-card {
+  background: rgba(7, 24, 39, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(130, 190, 225, 0.18);
+  border-radius: 0.75rem;
+}
+
+.polar-card:hover {
+  border-color: rgba(75, 177, 235, 0.42);
+}
