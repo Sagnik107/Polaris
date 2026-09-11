@@ -12,20 +12,31 @@ export const SocketProvider = ({ children }) => {
   const [activeEmergency, setActiveEmergency] = useState(null);
   const [recentEvents, setRecentEvents] = useState([]);
 
-  // Fetch initial unread count
+  // Fetch initial unread count and active emergency
   useEffect(() => {
     if (!user) return;
-    const fetchUnread = async () => {
+    const fetchInitialData = async () => {
       try {
-        const res = await api.get('/alerts/unread-count');
-        if (res.data?.success) {
-          setUnreadAlertsCount(res.data.data.unreadCount || 0);
+        const [unreadRes, incidentRes] = await Promise.all([
+          api.get('/alerts/unread-count').catch(() => null),
+          api.get('/incidents?limit=5').catch(() => null),
+        ]);
+        if (unreadRes?.data?.success) {
+          setUnreadAlertsCount(unreadRes.data.data.unreadCount || 0);
+        }
+        if (incidentRes?.data?.success && incidentRes.data.data?.length > 0) {
+          const criticalOrActive = incidentRes.data.data.find(
+            (inc) => inc.status === 'Reported' || inc.status === 'Responding' || inc.severity === 'Critical'
+          );
+          if (criticalOrActive) {
+            setActiveEmergency(criticalOrActive);
+          }
         }
       } catch (err) {
-        console.warn('Failed to fetch unread alerts count:', err);
+        console.warn('Failed to fetch initial socket context data:', err);
       }
     };
-    fetchUnread();
+    fetchInitialData();
   }, [user]);
 
   useEffect(() => {

@@ -133,7 +133,10 @@ const refreshTokenHandler = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
   try {
-    await User.findByIdAndUpdate(req.user._id, { refreshToken: null });
+    if (require('mongoose').connection.readyState === 1 && req.user?._id) {
+      await User.findByIdAndUpdate(req.user._id, { refreshToken: null }).catch(() => null);
+    }
+    res.clearCookie('polaris_token');
     res.json({ success: true, message: 'Logged out successfully.' });
   } catch (error) { next(error); }
 };
