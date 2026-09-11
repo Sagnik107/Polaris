@@ -69,8 +69,19 @@ let mockExpeditions = [
   {
     _id: '67cda2000000000000000001',
     code: 'INAE-44',
+    expeditionCode: 'INAE-44',
     name: '44th Indian Antarctic Expedition',
+    type: 'Antarctic',
     baseName: 'Bharati Station',
+    destinationBase: {
+      _id: '67cda0000000000000000002',
+      name: 'Bharati Station',
+      code: 'BHARATI',
+      location: 'Larsemann Hills, East Antarctica',
+      coordinates: { lat: -69.407, lng: 76.191 }
+    },
+    leader: 'Dr. Rajesh Sharma',
+    description: 'Premier Indian national research mission executing deep ice-core extraction, wind turbine grid commissioning, and cryosphere telemetry across Amery Ice Shelf.',
     status: 'Active',
     startDate: '2025-11-15T00:00:00.000Z',
     endDate: '2026-12-20T00:00:00.000Z',
@@ -78,19 +89,121 @@ let mockExpeditions = [
     riskLevel: 'Moderate',
     progress: 75,
     aiRiskPrediction: 'Low probability of delay. Weather window optimal for next 7 days.',
-    objectives: ['Drill 120m ice core at Amery Ice Shelf', 'Upgrade Bharati wind turbine farm', 'Map penguin colonies with UAV'],
-    milestones: [
-      { title: 'Base Camp Setup', dueDate: '2025-12-01', status: 'Completed' },
-      { title: 'Traverse to Amery Ridge', dueDate: '2026-02-15', status: 'Completed' },
-      { title: 'Subglacial Ice Core Extraction', dueDate: '2026-05-30', status: 'InProgress' },
+    objectives: [
+      'Drill 120m ice core at Amery Ice Shelf for CO2 isotope modeling',
+      'Commission 40kW arctic-grade wind turbine array at Bharati perimeter',
+      'UAV laser bathymetry of fast-ice calving margin'
     ],
     budget: { allocated: 4500000, spent: 2850000 },
+    assignedPersonnel: [
+      {
+        _id: '67cda6000000000000000001',
+        name: 'Dr. Rajesh Sharma',
+        designation: 'Lead Glaciologist',
+        team: 'Science',
+        department: 'Science',
+        status: 'Deployed',
+        medicalClearance: 'Cleared',
+        emergencyContact: '+91-9876543210',
+        skills: ['Ice Core Sampling', 'Cryosphere Modeling', 'Glacial Radar']
+      },
+      {
+        _id: '67cda6000000000000000002',
+        name: 'Dr. Maya Patel',
+        designation: 'Chief Medical Officer',
+        team: 'Medical',
+        department: 'Medical',
+        status: 'Deployed',
+        medicalClearance: 'Cleared',
+        emergencyContact: '+91-9876543211',
+        skills: ['Hypothermia Protocol', 'Tele-Surgery', 'Frostbite Triage']
+      },
+      {
+        _id: '67cda6000000000000000003',
+        name: 'Elena Rostova',
+        designation: 'Logistics Flight Director',
+        team: 'Logistics',
+        department: 'Logistics',
+        status: 'Deployed',
+        medicalClearance: 'Cleared',
+        emergencyContact: '+7-9123456789',
+        skills: ['Air Delivery Drop', 'Cargo Manifest', 'Weather Windowing']
+      },
+      {
+        _id: '67cda6000000000000000004',
+        name: 'Vikram Sengupta',
+        designation: 'Chief Electrical Engineer',
+        team: 'Operations',
+        department: 'Operations',
+        status: 'Deployed',
+        medicalClearance: 'Cleared',
+        emergencyContact: '+91-9876543212',
+        skills: ['Microgrid Synchronization', 'Cold-Start Generators', 'Turbines']
+      }
+    ],
+    assignedResources: [
+      {
+        _id: '67cda5000000000000000001',
+        item: 'PistenBully 300 Polar Snow Groomer (PB-01)',
+        category: 'Vehicle',
+        refModel: 'Asset',
+        quantity: 2,
+        notes: 'Equipped with heavy deep-snow track cleats and auxiliary cab heater.'
+      },
+      {
+        _id: '67cda5000000000000000002',
+        item: 'Thermal Electro-Mechanical Core Drill Assembly',
+        category: 'Scientific Instrument',
+        refModel: 'Asset',
+        quantity: 1,
+        notes: 'Rated to -55°C downhole ambient temperature.'
+      },
+      {
+        _id: '67cda4000000000000000001',
+        item: 'Aviation Turbine Fuel Jet A-1 Cryo Drums',
+        category: 'Fuel',
+        refModel: 'Inventory',
+        quantity: 40,
+        notes: 'Stored in freeze-resistant insulated pallets at Base Camp.'
+      },
+      {
+        _id: '67cda4000000000000000003',
+        item: 'Emergency Cryo Blood Plasma Units (O-Neg)',
+        category: 'Medical',
+        refModel: 'Inventory',
+        quantity: 12,
+        notes: 'Vacuum-sealed in mobile tactical trauma cryo-chest.'
+      }
+    ],
+    milestones: [
+      { _id: '67cdm1000000000000000001', title: 'Base Camp Setup & Satellite Lock', dueDate: '2025-12-01T00:00:00.000Z', status: 'Completed' },
+      { _id: '67cdm1000000000000000002', title: 'Over-Ice Traverse to Amery Ridge Sector 4', dueDate: '2026-02-15T00:00:00.000Z', status: 'Completed' },
+      { _id: '67cdm1000000000000000003', title: 'Subglacial Ice Core Extraction (120m Target)', dueDate: '2026-05-30T00:00:00.000Z', status: 'In Progress' },
+      { _id: '67cdm1000000000000000004', title: 'Specimen Packaging & Return Traverse to Bharati', dueDate: '2026-11-15T00:00:00.000Z', status: 'Pending' }
+    ],
+    timeline: [
+      { _id: 'log1', action: 'EXPEDITION_CREATED', description: 'Mission INAE-44 authorized and registered under POLARIS C2 Protocol.', actorName: 'Commander Sarah Jenkins', createdAt: '2025-10-12T08:00:00.000Z' },
+      { _id: 'log2', action: 'PERSONNEL_ASSIGNED', description: 'Assigned Dr. Rajesh Sharma and 3 specialists to primary traverse roster.', actorName: 'Dr. Rajesh Sharma', createdAt: '2025-11-01T10:30:00.000Z' },
+      { _id: 'log3', action: 'MILESTONE_COMPLETED', description: 'Milestone "Base Camp Setup & Satellite Lock" marked Completed.', actorName: 'Elena Rostova', createdAt: '2025-12-01T14:15:00.000Z' },
+      { _id: 'log4', action: 'MILESTONE_COMPLETED', description: 'Milestone "Over-Ice Traverse to Amery Ridge Sector 4" marked Completed.', actorName: 'Vikram Sengupta', createdAt: '2026-02-15T18:45:00.000Z' }
+    ]
   },
   {
     _id: '67cda2000000000000000002',
     code: 'LARSEM-2026',
+    expeditionCode: 'LARSEM-2026',
     name: 'Larsemann Hills Structural Bedrock Survey',
+    type: 'Survey',
     baseName: 'Bharati Station',
+    destinationBase: {
+      _id: '67cda0000000000000000002',
+      name: 'Bharati Station',
+      code: 'BHARATI',
+      location: 'Larsemann Hills, East Antarctica',
+      coordinates: { lat: -69.407, lng: 76.191 }
+    },
+    leader: 'Capt. Thomas Lindqvist',
+    description: 'High-precision tectonic and geomagnetic bedrock mapping in the Larsemann Hills oasis using mobile broadband seismographs.',
     status: 'Active',
     startDate: '2026-01-10T00:00:00.000Z',
     endDate: '2026-12-31T00:00:00.000Z',
@@ -98,18 +211,59 @@ let mockExpeditions = [
     riskLevel: 'High',
     progress: 41,
     aiRiskPrediction: '74-knot gusts causing 3-day delay. Sheltering at Refuge Pod 3.',
-    objectives: ['Sustain wintering team of 25 personnel', 'Maintain ozone observation Dobson spectrophotometer'],
-    milestones: [
-      { title: 'Lake Pipeline Heat-Tracing', dueDate: '2026-02-01', status: 'Completed' },
-      { title: 'Fuel Delivery Convoy from Coast', dueDate: '2026-03-05', status: 'Pending' },
+    objectives: [
+      'Sustain wintering team of 25 personnel at Refuge Pods',
+      'Maintain ozone observation Dobson spectrophotometer',
+      'Map bedrock fault lines across Fisher Island channel'
     ],
     budget: { allocated: 3800000, spent: 1900000 },
+    assignedPersonnel: [
+      {
+        _id: '67cda6000000000000000005',
+        name: 'Capt. Thomas Lindqvist',
+        designation: 'Station Base Commander',
+        team: 'Command',
+        department: 'Command',
+        status: 'Deployed',
+        medicalClearance: 'Cleared',
+        emergencyContact: '+46-701234567',
+        skills: ['Ice Navigation', 'Hazard Mitigation', 'Gale Survival']
+      }
+    ],
+    assignedResources: [
+      {
+        _id: '67cda5000000000000000003',
+        item: 'Hägglunds BV206 All-Terrain Tracked Carrier',
+        category: 'Vehicle',
+        refModel: 'Asset',
+        quantity: 1,
+        notes: 'Winterized rubber tracks.'
+      }
+    ],
+    milestones: [
+      { _id: '67cdm2000000000000000001', title: 'Lake Pipeline Heat-Tracing Inspection', dueDate: '2026-02-01T00:00:00.000Z', status: 'Completed' },
+      { _id: '67cdm2000000000000000002', title: 'Fuel Delivery Convoy from Coast', dueDate: '2026-03-05T00:00:00.000Z', status: 'In Progress' }
+    ],
+    timeline: [
+      { _id: 'log5', action: 'EXPEDITION_CREATED', description: 'Survey mission initialized.', actorName: 'Commander Sarah Jenkins', createdAt: '2026-01-05T09:00:00.000Z' }
+    ]
   },
   {
     _id: '67cda2000000000000000003',
     code: 'ARCTIC-2026',
+    expeditionCode: 'ARCTIC-2026',
     name: 'Ny-Ålesund Spring Atmospheric Survey',
+    type: 'Arctic',
     baseName: 'Himadri Station',
+    destinationBase: {
+      _id: '67cda0000000000000000003',
+      name: 'Himadri Station',
+      code: 'HIMADRI',
+      location: 'Ny-Ålesund, Svalbard',
+      coordinates: { lat: 78.924, lng: 11.928 }
+    },
+    leader: 'Dr. Ingrid Hansen',
+    description: 'Svalbard optical lidar profiling of spring aerosol nucleation and black carbon deposition during arctic sunrise.',
     status: 'Planning',
     startDate: '2026-04-01T00:00:00.000Z',
     endDate: '2026-09-30T00:00:00.000Z',
@@ -117,17 +271,36 @@ let mockExpeditions = [
     riskLevel: 'Low',
     progress: 0,
     aiRiskPrediction: 'Awaiting sensor bench calibration. No environmental risks.',
-    objectives: ['Deploy multi-wavelength micro-pulse lidar', 'Quantify organic aerosols during snow melt'],
-    milestones: [
-      { title: 'Sensor Bench Calibration', dueDate: '2026-03-20', status: 'InProgress' },
+    objectives: [
+      'Deploy multi-wavelength micro-pulse lidar at Zeppelin Observatory',
+      'Quantify organic aerosols during seasonal snow melt'
     ],
     budget: { allocated: 1200000, spent: 180000 },
+    assignedPersonnel: [],
+    assignedResources: [],
+    milestones: [
+      { _id: '67cdm3000000000000000001', title: 'Sensor Bench Calibration & Bench Test', dueDate: '2026-03-20T00:00:00.000Z', status: 'In Progress' }
+    ],
+    timeline: [
+      { _id: 'log6', action: 'EXPEDITION_CREATED', description: 'Arctic campaign registered for Q2 2026 deployment.', actorName: 'Dr. Rajesh Sharma', createdAt: '2026-02-01T11:00:00.000Z' }
+    ]
   },
   {
     _id: '67cda2000000000000000004',
     code: 'RESUP-26',
+    expeditionCode: 'RESUP-26',
     name: 'Bharati Resupply Convoy',
+    type: 'Resupply',
     baseName: 'Bharati Station',
+    destinationBase: {
+      _id: '67cda0000000000000000002',
+      name: 'Bharati Station',
+      code: 'BHARATI',
+      location: 'Larsemann Hills, East Antarctica',
+      coordinates: { lat: -69.407, lng: 76.191 }
+    },
+    leader: 'Elena Rostova',
+    description: 'Critical annual over-ice fuel convoy and heavy machinery transfer from Princess Astrid Coast to station fuel bladders.',
     status: 'Active',
     startDate: '2026-02-01T00:00:00.000Z',
     endDate: '2026-03-15T00:00:00.000Z',
@@ -135,12 +308,20 @@ let mockExpeditions = [
     riskLevel: 'Low',
     progress: 92,
     aiRiskPrediction: 'Clear corridor. Docking expected in 2h 15m.',
-    objectives: ['Antarctic Station Critical Fuel & Cryo-Logistics'],
-    milestones: [
-      { title: 'Depart Coast', dueDate: '2026-02-02', status: 'Completed' },
-      { title: 'Arrival at Station', dueDate: '2026-03-10', status: 'InProgress' },
+    objectives: [
+      'Transport 40,000L polar diesel to Main Bladder',
+      'Deliver replacement CAT 3406 generator alternator'
     ],
     budget: { allocated: 800000, spent: 650000 },
+    assignedPersonnel: [],
+    assignedResources: [],
+    milestones: [
+      { _id: '67cdm4000000000000000001', title: 'Depart Coast Landing Bay', dueDate: '2026-02-02T00:00:00.000Z', status: 'Completed' },
+      { _id: '67cdm4000000000000000002', title: 'Arrival at Bharati Station Perimeter', dueDate: '2026-03-10T00:00:00.000Z', status: 'In Progress' }
+    ],
+    timeline: [
+      { _id: 'log7', action: 'EXPEDITION_CREATED', description: 'Resupply convoy cleared by Maritime Command.', actorName: 'Elena Rostova', createdAt: '2026-01-20T10:00:00.000Z' }
+    ]
   },
 ];
 

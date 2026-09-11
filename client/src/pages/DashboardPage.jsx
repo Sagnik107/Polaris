@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
+import { getSocket } from '../services/socket';
 import Modal from '../components/common/Modal';
 
 export const DashboardPage = () => {
@@ -131,6 +132,26 @@ export const DashboardPage = () => {
   useEffect(() => {
     fetchDashboard();
     const timer = setInterval(() => fetchDashboard(false), 30000);
+
+    const socket = getSocket();
+    if (socket) {
+      const handleExpUpdate = () => {
+        fetchDashboard(false);
+      };
+      socket.on('expedition:updated', handleExpUpdate);
+      socket.on('expedition:created', handleExpUpdate);
+      socket.on('expedition:deleted', handleExpUpdate);
+      socket.on('dashboard:statsUpdated', handleExpUpdate);
+
+      return () => {
+        clearInterval(timer);
+        socket.off('expedition:updated', handleExpUpdate);
+        socket.off('expedition:created', handleExpUpdate);
+        socket.off('expedition:deleted', handleExpUpdate);
+        socket.off('dashboard:statsUpdated', handleExpUpdate);
+      };
+    }
+
     return () => clearInterval(timer);
   }, []);
 
@@ -701,54 +722,89 @@ export const DashboardPage = () => {
 
             {/* Expedition Cards */}
             <div className="divide-y divide-border-default/60">
-              {filteredExpeditions.slice(0, 3).map((exp) => (
-                <div
-                  key={exp._id || exp.code}
-                  onClick={() => navigate(`/expeditions/${exp._id || ''}`)}
-                  className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-surface-container/30 px-2 rounded-lg transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-lg bg-surface-2 border flex items-center justify-center mt-0.5 ${
-                      exp.riskLevel === 'High' || exp.riskLevel === 'Critical' ? 'border-warning/40 text-warning' : 'border-border-default text-ice-400'
-                    }`}>
-                      <span className="material-symbols-outlined">{exp.riskLevel === 'High' ? 'warning' : 'terrain'}</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-headline text-base font-bold text-text-primary tracking-wide">{exp.code}</span>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border ${
-                          exp.riskLevel === 'High' || exp.riskLevel === 'Critical' ? 'bg-warning/15 text-warning border-warning/40' : 'bg-aurora-500/10 text-aurora-400 border-aurora-500/30'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${exp.riskLevel === 'High' ? 'bg-warning animate-pulse' : 'bg-aurora-400'}`} /> 
-                          [{exp.riskLevel === 'High' ? 'AT RISK' : 'ON TRACK'}]
-                        </span>
-                        {exp.riskLevel === 'High' && (
-                           <span className="text-[11px] text-danger font-mono font-medium">Delay Predicted</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-text-secondary mt-0.5">{exp.name}</p>
-                      <div className="flex items-center gap-4 text-xs font-mono text-text-muted mt-1">
-                        <span>Base: {exp.baseName || (exp.destinationBase?.name) || 'Bharati Station'}</span>
-                        <span>•</span>
-                        <span className={exp.riskLevel === 'High' ? "text-warning" : "text-aurora-400"}>
-                          {exp.aiRiskPrediction || 'Clear Corridor'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+              {filteredExpeditions.slice(0, 3).map((exp) => {
+                const expCode = exp.expeditionCode || exp.code || 'EXP';
+                const expProgress = typeof exp.progress === 'number' ? exp.progress : (exp.readinessScore ?? 0);
+                const isAtRisk = exp.riskLevel === 'High' || exp.riskLevel === 'Critical';
 
-                  <div className="sm:w-48 flex flex-col items-end gap-1.5">
-                    <div className="w-full flex justify-between text-xs font-mono">
-                      <span className="text-text-muted">Progress</span>
-                      <span className={`${exp.riskLevel === 'High' ? 'text-warning' : 'text-ice-300'} font-semibold`}>{exp.progress || exp.readinessScore || 75}%</span>
+                // Find currently active or next milestone
+                const inProgressMs = exp.milestones?.find(m => {
+                  const s = (m.status || '').toLowerCase();
+                  return s === 'in_progress' || s === 'inprogress' || s === 'in progress';
+                });
+                const pendingMs = exp.milestones?.find(m => (m.status || '').toLowerCase() === 'pending');
+                const completedCount = exp.milestones?.filter(m => (m.status || '').toLowerCase() === 'completed').length || 0;
+                const totalCount = exp.milestones?.length || 0;
+
+                let stageLabel = 'Active Operations';
+                if (inProgressMs) {
+                  stageLabel = `⚡ In Progress: ${inProgressMs.title}`;
+                } else if (pendingMs) {
+                  stageLabel = `⏱ Next: ${pendingMs.title}`;
+                } else if (totalCount > 0 && completedCount === totalCount) {
+                  stageLabel = `✓ All ${totalCount} Milestones Cleared`;
+                } else if (exp.status) {
+                  stageLabel = `Status: ${exp.status}`;
+                }
+
+                return (
+                  <div
+                    key={exp._id || exp.code || exp.expeditionCode}
+                    onClick={() => navigate(`/expeditions/${exp._id || exp.code || exp.expeditionCode || ''}`)}
+                    className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-surface-container/30 px-2 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-lg bg-surface-2 border flex items-center justify-center mt-0.5 ${
+                        isAtRisk ? 'border-warning/40 text-warning' : 'border-border-default text-ice-400'
+                      }`}>
+                        <span className="material-symbols-outlined">{isAtRisk ? 'warning' : 'terrain'}</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <span className="font-headline text-base font-bold text-text-primary tracking-wide">{expCode}</span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border ${
+                            isAtRisk ? 'bg-warning/15 text-warning border-warning/40' : 'bg-aurora-500/10 text-aurora-400 border-aurora-500/30'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isAtRisk ? 'bg-warning animate-pulse' : 'bg-aurora-400'}`} /> 
+                            [{isAtRisk ? 'AT RISK' : 'ON TRACK'}]
+                          </span>
+                          {isAtRisk && (
+                            <span className="text-[11px] text-danger font-mono font-medium">Delay Predicted</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-text-secondary mt-0.5">{exp.name}</p>
+                        <div className="flex items-center gap-4 text-xs font-mono text-text-muted mt-1">
+                          <span>Base: {exp.baseName || (exp.destinationBase?.name) || exp.targetBase || 'Bharati Station'}</span>
+                          <span>•</span>
+                          <span className={isAtRisk ? "text-warning" : "text-aurora-400"}>
+                            {exp.aiRiskPrediction || (isAtRisk ? 'Katabatic Storm / Crevasse Hazard' : 'Clear Corridor')}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="w-full h-2 bg-polar-900 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${exp.riskLevel === 'High' ? 'bg-warning' : 'bg-ice-400'}`} style={{ width: `${exp.progress || exp.readinessScore || 75}%` }} />
+
+                    <div className="sm:w-52 flex flex-col items-end gap-1.5 shrink-0">
+                      <div className="w-full flex justify-between text-xs font-mono">
+                        <span className="text-text-muted">Progress</span>
+                        <span className={`${isAtRisk ? 'text-warning' : 'text-ice-300'} font-semibold`}>
+                          {expProgress}%
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-polar-900 rounded-full overflow-hidden border border-border-default/40">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isAtRisk ? 'bg-warning' : 'bg-gradient-to-r from-ice-500 to-aurora-400'
+                          }`}
+                          style={{ width: `${Math.min(100, Math.max(0, expProgress))}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-text-muted font-mono truncate max-w-[210px]" title={stageLabel}>
+                        {stageLabel}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-text-muted font-mono">{exp.milestones?.[0]?.title || 'Deploying'}</span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               
               {filteredExpeditions.length === 0 && (
                 <div className="py-8 text-center text-text-muted font-mono text-sm">

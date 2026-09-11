@@ -13,7 +13,18 @@ const { mockExpeditions, mockCargo, mockAlerts, mockPersonnel, mockInventory, mo
 const getDashboardSummary = async (req, res, next) => {
   try {
     if (require('mongoose').connection.readyState !== 1) {
-      const activeExpeditions = mockExpeditions.filter(e => e.status === 'Active');
+      const activeExpeditions = mockExpeditions.filter(e => e.status === 'Active' || e.status === 'In Progress');
+      activeExpeditions.forEach(e => {
+        if (e.milestones && e.milestones.length > 0) {
+          let score = 0;
+          for (const m of e.milestones) {
+            const s = (m.status || '').toLowerCase();
+            if (s === 'completed') score += 1.0;
+            else if (s === 'in_progress' || s === 'inprogress' || s === 'in progress') score += 0.5;
+          }
+          e.progress = Math.min(100, Math.round((score / e.milestones.length) * 100));
+        }
+      });
       const avgReadiness = activeExpeditions.length > 0 
         ? Math.round(activeExpeditions.reduce((acc, curr) => acc + (curr.readinessScore || 0), 0) / activeExpeditions.length) 
         : 87;
@@ -78,9 +89,9 @@ const getDashboardSummary = async (req, res, next) => {
       overdueTasks, totalTasks, completedTasks,
       bases,
       recentActivity,
-      expeditions,
+      rawExpeditions,
     ] = await Promise.all([
-      Expedition.countDocuments({ status: 'Active' }),
+      Expedition.countDocuments({ status: { $in: ['Active', 'In Progress'] } }),
       Expedition.countDocuments(),
       Expedition.countDocuments({ status: 'Planning' }),
       Personnel.countDocuments({ status: { $in: ['Deployed', 'At Base'] } }),
@@ -100,8 +111,25 @@ const getDashboardSummary = async (req, res, next) => {
       Task.countDocuments({ status: 'Completed' }),
       Base.find().lean(),
       ActivityLog.find().sort('-createdAt').limit(10).lean(),
-      Expedition.find({ status: 'Active' }).populate('destinationBase').lean(),
+      Expedition.find({ status: { $in: ['Active', 'In Progress'] } }).populate('destinationBase').lean(),
     ]);
+
+    const expeditions = (rawExpeditions || []).map(exp => {
+      let score = 0;
+      const milestones = exp.milestones || [];
+      if (milestones.length > 0) {
+        for (const m of milestones) {
+          const s = (m.status || '').toLowerCase();
+          if (s === 'completed') score += 1.0;
+          else if (s === 'in_progress' || s === 'inprogress' || s === 'in progress') score += 0.5;
+        }
+        exp.progress = Math.min(100, Math.round((score / milestones.length) * 100));
+      } else {
+        exp.progress = exp.progress ?? 0;
+      }
+      exp.code = exp.code || exp.expeditionCode;
+      return exp;
+    });
 
     // Calculate dynamic readiness score from active expeditions
     let readinessScore = 87;

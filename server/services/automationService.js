@@ -94,10 +94,15 @@ const calculateReadinessScore = (expedition) => {
   const resourceScore = Math.min((expedition.assignedResources?.length || 0) / resourceTarget, 1) * 100;
   score += resourceScore * 0.25;
   factors++;
-  // Milestone completion %
+  // Milestone completion & in-progress %
   if (expedition.milestones && expedition.milestones.length > 0) {
-    const completed = expedition.milestones.filter((m) => m.status === 'Completed').length;
-    const milestoneScore = (completed / expedition.milestones.length) * 100;
+    let msScore = 0;
+    for (const m of expedition.milestones) {
+      const s = (m.status || '').toLowerCase();
+      if (s === 'completed') msScore += 1.0;
+      else if (s === 'in_progress' || s === 'inprogress' || s === 'in progress') msScore += 0.5;
+    }
+    const milestoneScore = (msScore / expedition.milestones.length) * 100;
     score += milestoneScore * 0.40;
   } else {
     score += 50 * 0.40;
