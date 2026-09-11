@@ -558,7 +558,6 @@ export const AlertsPage = () => {
                 <option value="Maitri Station">Maitri Station</option>
                 <option value="Bharati Station">Bharati Station</option>
                 <option value="Himadri Station">Himadri Station</option>
-                <option value="RV Bharati">RV Bharati (Vessel)</option>
               </select>
             </div>
           </div>
@@ -927,7 +926,6 @@ export const AlertsPage = () => {
                         { base: 'Maitri', critical: 1, high: 1, warning: 0 },
                         { base: 'Bharati', critical: 1, high: 1, warning: 1 },
                         { base: 'Himadri', critical: 0, high: 0, warning: 1 },
-                        { base: 'RV Bharati', critical: 0, high: 0, warning: 1 },
                       ]
                     }
                   >
@@ -977,7 +975,6 @@ export const AlertsPage = () => {
                         { base: 'Maitri', stock: 18500, min: 12000 },
                         { base: 'Bharati', stock: 28000, min: 8000 },
                         { base: 'Himadri', stock: 6500, min: 3000 },
-                        { base: 'RV Bharati', stock: 22000, min: 7000 },
                       ]
                     }
                   >
@@ -1145,7 +1142,6 @@ export const AlertsPage = () => {
                 <option value="Maitri Station">Maitri Station (Antarctica)</option>
                 <option value="Bharati Station">Bharati Station (Antarctica)</option>
                 <option value="Himadri Station">Himadri Station (Arctic/Svalbard)</option>
-                <option value="RV Bharati">RV Bharati (Polar Vessel)</option>
               </select>
             </div>
 

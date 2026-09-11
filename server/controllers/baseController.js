@@ -109,31 +109,38 @@ const getBase = async (req, res, next) => {
   try {
     const isMock = require('mongoose').connection.readyState !== 1;
 
+    const param = String(req.params.id).trim().toLowerCase();
+
     if (isMock) {
       const base =
-        mockBases.find((b) => b._id === req.params.id || b.code === req.params.id) ||
-        mockBases[0];
+        mockBases.find(
+          (b) =>
+            b._id === req.params.id ||
+            (b.code && b.code.toLowerCase() === param) ||
+            (b.name && b.name.toLowerCase().includes(param))
+        ) || mockBases[0];
 
       const baseId = base._id;
       const baseName = base.name;
+      const basePrefix = base.name.split(' ')[0];
 
       const personnel = mockPersonnel.filter(
-        (p) => p.currentBase === baseId || (p.baseName && p.baseName.includes(base.name.split(' ')[0]))
+        (p) => p.currentBase === baseId || (p.baseName && p.baseName.includes(basePrefix))
       );
       const inventory = mockInventory.filter(
-        (i) => i.base === baseId || (i.baseName && i.baseName.includes(base.name.split(' ')[0]))
+        (i) => i.base === baseId || (i.baseName && i.baseName.includes(basePrefix))
       );
       const assets = mockAssets.filter(
-        (a) => a.base === baseId || (a.baseName && a.baseName.includes(base.name.split(' ')[0]))
+        (a) => a.base === baseId || (a.baseName && a.baseName.includes(basePrefix))
       );
       const cargo = mockCargo.filter(
         (c) =>
           c.destinationBase === baseId ||
-          (c.destination && c.destination.includes(base.name.split(' ')[0])) ||
-          (c.destinationBaseName && c.destinationBaseName.includes(base.name.split(' ')[0]))
+          (c.destination && c.destination.includes(basePrefix)) ||
+          (c.destinationBaseName && c.destinationBaseName.includes(basePrefix))
       );
       const alerts = mockAlerts.filter(
-        (al) => !al.isRead && (al.base === baseName || (al.base && al.base.includes(base.name.split(' ')[0])))
+        (al) => !al.isRead && (al.base === baseName || (al.base && al.base.includes(basePrefix)))
       );
 
       return res.json({
@@ -149,7 +156,19 @@ const getBase = async (req, res, next) => {
       });
     }
 
-    const base = await Base.findById(req.params.id);
+    let base;
+    const mongoose = require('mongoose');
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      base = await Base.findById(req.params.id);
+    }
+    if (!base) {
+      base = await Base.findOne({
+        $or: [
+          { code: new RegExp(`^${req.params.id}$`, 'i') },
+          { name: new RegExp(req.params.id, 'i') },
+        ],
+      });
+    }
     if (!base) return res.status(404).json({ success: false, message: 'Base not found.' });
 
     // Aggregate linked data

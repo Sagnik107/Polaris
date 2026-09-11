@@ -66,11 +66,10 @@ Visit: `http://localhost:5173`
 
 ---
 
-## 4 Polar Bases Configured
-1. **Maitri Station** (Schirmacher Oasis, Queen Maud Land, Antarctica: -70.767°, 11.733°)
-2. **Bharati Station** (Larsemann Hills, East Antarctica: -69.407°, 76.191°)
-3. **Himadri Station** (Ny-Ålesund, Svalbard, Arctic: 78.924°, 11.928°)
-4. **RV Bharati** (Southern Ocean Research Vessel: -65.200°, 45.300°)
+## 3 Polar Bases Configured
+1. **Maitri Station** (Schirmacher Oasis, Queen Maud Land, Antarctica: 70°45′58″S, 11°43′56″E [-70.7661°, 11.7322°])
+2. **Bharati Station** (Larsemann Hills, East Antarctica: 69°24.41′S, 76°11.72′E [-69.4068°, 76.1953°])
+3. **Himadri Station** (Ny-Ålesund, Spitsbergen, Svalbard, Norway: 78°55′N, 11°56′E [78.9167°, 11.9333°])
 
 ---
 

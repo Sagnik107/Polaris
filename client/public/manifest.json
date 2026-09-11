@@ -1,0 +1,22 @@
+{
+  "short_name": "POLARIS",
+  "name": "POLARIS Polar Command & Operations Management System",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "64x64 32x32 24x24 16x16 192x192 512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/polaris-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "64x64 32x32 24x24 16x16 192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#020914",
+  "theme_color": "#020914",
+  "display": "standalone"
+}

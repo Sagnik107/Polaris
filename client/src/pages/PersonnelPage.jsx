@@ -640,7 +640,6 @@ export const PersonnelPage = () => {
               <option value="Maitri" className="bg-slate-900 text-slate-200">Maitri Station</option>
               <option value="Bharati" className="bg-slate-900 text-slate-200">Bharati Station</option>
               <option value="Himadri" className="bg-slate-900 text-slate-200">Himadri Station</option>
-              <option value="RV Bharati" className="bg-slate-900 text-slate-200">RV Bharati</option>
             </select>
           </div>
 
@@ -1176,7 +1175,6 @@ export const PersonnelPage = () => {
                 <option value="Maitri Station">Maitri Station</option>
                 <option value="Bharati Station">Bharati Station</option>
                 <option value="Himadri Station">Himadri Station</option>
-                <option value="RV Bharati">RV Bharati</option>
               </select>
             </div>
             <div>
@@ -1430,10 +1428,9 @@ export const PersonnelPage = () => {
               onChange={(e) => setReassignForm({ ...reassignForm, targetBaseName: e.target.value })}
               className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-cyan-500 font-bold"
             >
-              <option value="Maitri Station">Maitri Station (Queen Maud Land)</option>
+              <option value="Maitri Station">Maitri Station (Schirmacher Oasis)</option>
               <option value="Bharati Station">Bharati Station (Larsemann Hills)</option>
               <option value="Himadri Station">Himadri Station (Ny-Ålesund, Svalbard)</option>
-              <option value="RV Bharati">RV Bharati (Southern Ocean Vessel)</option>
             </select>
           </div>
 

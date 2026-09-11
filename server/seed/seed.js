@@ -44,7 +44,7 @@ const seedData = async () => {
         name: 'Maitri Station',
         code: 'MAITRI',
         location: 'Schirmacher Oasis, Queen Maud Land, Antarctica',
-        coordinates: { lat: -70.767, lng: 11.733 },
+        coordinates: { lat: -70.7661, lng: 11.7322 },
         type: 'Permanent Station',
         capacity: 65,
         currentPersonnel: 38,
@@ -55,7 +55,7 @@ const seedData = async () => {
         name: 'Bharati Station',
         code: 'BHARATI',
         location: 'Larsemann Hills, East Antarctica',
-        coordinates: { lat: -69.407, lng: 76.191 },
+        coordinates: { lat: -69.4068, lng: 76.1953 },
         type: 'Permanent Station',
         capacity: 72,
         currentPersonnel: 44,
@@ -66,30 +66,18 @@ const seedData = async () => {
         name: 'Himadri Station',
         code: 'HIMADRI',
         location: 'Ny-Ålesund, Spitsbergen, Svalbard (Arctic)',
-        coordinates: { lat: 78.924, lng: 11.928 },
+        coordinates: { lat: 78.9167, lng: 11.9333 },
         type: 'Research Station',
         capacity: 25,
         currentPersonnel: 14,
         status: 'Operational',
         elevationMeters: 15,
       },
-      {
-        name: 'RV Bharati',
-        code: 'RV-BHARATI',
-        location: 'Southern Ocean (Off Princess Astrid Coast)',
-        coordinates: { lat: -65.2, lng: 45.3 },
-        type: 'Mobile Vessel',
-        capacity: 50,
-        currentPersonnel: 28,
-        status: 'Operational',
-        elevationMeters: 0,
-      },
     ]);
 
     const bMaitri = bases[0];
     const bBharati = bases[1];
     const bHimadri = bases[2];
-    const bVessel = bases[3];
 
     console.log('[POLARIS SEED] Seeding Users with hashed passwords...');
     const salt = await bcrypt.genSalt(10);
@@ -180,13 +168,13 @@ const seedData = async () => {
       { name: 'Dr. Sunita Rao', employeeId: 'POL-0111', role: 'Arctic Marine Biologist', department: 'Science', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543217', skills: ['Plankton Trawling', 'DNA Barcoding'] },
       { name: 'Lt. Col. Pradeep Rawat', employeeId: 'POL-0112', role: 'Field Safety Officer', department: 'Operations', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543223', skills: ['Polar Defense', 'Glacier Rescue'] },
       { name: 'Priya Nambiar', employeeId: 'POL-0113', role: 'Aerosol Scientist', department: 'Science', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543224', skills: ['Spectrophotometry', 'Black Carbon'] },
-      { name: 'Capt. Manpreet Singh', employeeId: 'POL-0114', role: 'Master Navigator', department: 'Command', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543225', skills: ['Icebreaker Pilotage', 'Sonar Bathymetry'] },
-      { name: 'Dr. Kavita Krishnan', employeeId: 'POL-0115', role: 'Oceanographer', department: 'Science', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543226', skills: ['CTD Rosette', 'Ocean Currents'] },
+      { name: 'Capt. Manpreet Singh', employeeId: 'POL-0114', role: 'Master Navigator', department: 'Command', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543225', skills: ['Icebreaker Pilotage', 'Sonar Bathymetry'] },
+      { name: 'Dr. Kavita Krishnan', employeeId: 'POL-0115', role: 'Oceanographer', department: 'Science', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543226', skills: ['CTD Rosette', 'Ocean Currents'] },
       { name: 'Tenzing Sherpa', employeeId: 'POL-0116', role: 'Crevasse Rescue Specialist', department: 'Operations', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+977-980123456', skills: ['Alpine Mountaineering', 'Deep Rigging'] },
       { name: 'Dr. Suresh Menon', employeeId: 'POL-0117', role: 'Seismologist', department: 'Science', base: bMaitri._id, baseName: 'Maitri Station', status: 'Leave', medicalClearance: 'Cleared', emergencyContact: '+91-9876543227', skills: ['Broadband Seismometer', 'Inversion'] },
       { name: 'Ananya Roy', employeeId: 'POL-0118', role: 'Field Paramedic', department: 'Medical', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543228', skills: ['Frostbite Debridement', 'Emergency Triage'] },
       { name: 'Devendra Pratap', employeeId: 'POL-0119', role: 'Instrumentation Engineer', department: 'Operations', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543218', skills: ['PLC Automation', 'Cold Sensors'] },
-      { name: 'Sunil Gavaskar', employeeId: 'POL-0120', role: 'Vessel Chief Mate', department: 'Operations', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543229', skills: ['Deck Cranes', 'Sea Ice Mooring'] },
+      { name: 'Sunil Gavaskar', employeeId: 'POL-0120', role: 'Station Mechanical Mate', department: 'Operations', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543229', skills: ['Deck Cranes', 'Sea Ice Mooring'] },
     ]);
 
     console.log('[POLARIS SEED] Seeding Expeditions...');
@@ -250,10 +238,10 @@ const seedData = async () => {
       },
       {
         code: 'SO-DEEP-2026',
-        name: 'Southern Ocean Hydrographic & Krill Transect',
-        base: bVessel._id,
-        baseName: 'RV Bharati',
-        leadScientist: personnelList[14]._id,
+        name: 'Southern Ocean & Prydz Bay Hydrographic Transect',
+        base: bBharati._id,
+        baseName: 'Bharati Station',
+        leadScientist: personnelList[13]._id,
         status: 'Active',
         startDate: new Date('2026-01-05'),
         endDate: new Date('2026-04-20'),
@@ -303,7 +291,7 @@ const seedData = async () => {
       // Food & Rations
       { name: 'High-Calorie Polar Trekking MREs (4500 kcal)', sku: 'FOOD-MRE-01', category: 'Rations', base: bBharati._id, baseName: 'Bharati Station', quantity: 1420, unit: 'Packs', minThreshold: 400, unitCost: 18.5, locationDetails: 'Food Store Modular Bay 4', status: 'InStock' },
       { name: 'Freeze-Dried Nutrient Protein Stews', sku: 'FOOD-FRZ-02', category: 'Rations', base: bMaitri._id, baseName: 'Maitri Station', quantity: 890, unit: 'Cans', minThreshold: 300, unitCost: 24.0, locationDetails: 'Pantry B Block', status: 'InStock' },
-      { name: 'Emergency Lifeboat Ration Biscuits', sku: 'FOOD-LFT-03', category: 'Rations', base: bVessel._id, baseName: 'RV Bharati', quantity: 340, unit: 'Boxes', minThreshold: 100, unitCost: 12.0, locationDetails: 'Muster Station Lockers', status: 'InStock' },
+      { name: 'Emergency Lifeboat Ration Biscuits', sku: 'FOOD-LFT-03', category: 'Rations', base: bBharati._id, baseName: 'Bharati Station', quantity: 340, unit: 'Boxes', minThreshold: 100, unitCost: 12.0, locationDetails: 'Muster Station Lockers', status: 'InStock' },
 
       // Vehicle Parts & Equipment
       { name: 'PistenBully 300 Rubber Track Cleats', sku: 'PART-PST-TRK-01', category: 'SpareParts', base: bBharati._id, baseName: 'Bharati Station', quantity: 16, unit: 'Units', minThreshold: 8, unitCost: 650.0, locationDetails: 'Workshop Hangar Shelf G', status: 'InStock' },
@@ -406,8 +394,8 @@ const seedData = async () => {
         name: 'Marine Multibeam Echo Sounder',
         assetTag: 'AST-NAV-01',
         category: 'Scientific',
-        base: bVessel._id,
-        baseName: 'RV Bharati',
+        base: bBharati._id,
+        baseName: 'Bharati Station',
         model: 'Kongsberg EM 122',
         serialNumber: 'KNG-EM122-11',
         status: 'Operational',

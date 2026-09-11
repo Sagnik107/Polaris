@@ -77,9 +77,9 @@ const CATEGORY_ICONS = {
 
 // Standard Polar Stations and Gateways for Leaflet Map
 const POLAR_WAYPOINTS = [
-  { name: 'Maitri Station', lat: -70.767, lng: 11.733, type: 'Station', code: 'MAITRI' },
-  { name: 'Bharati Station', lat: -69.407, lng: 76.191, type: 'Station', code: 'BHARATI' },
-  { name: 'Himadri Station', lat: 78.923, lng: 11.928, type: 'Arctic Base', code: 'HIMADRI' },
+  { name: 'Maitri Station', lat: -70.7661, lng: 11.7322, type: 'Station', code: 'MAITRI' },
+  { name: 'Bharati Station', lat: -69.4068, lng: 76.1953, type: 'Station', code: 'BHARATI' },
+  { name: 'Himadri Station', lat: 78.9167, lng: 11.9333, type: 'Arctic Base', code: 'HIMADRI' },
   { name: 'Cape Town Port', lat: -33.924, lng: 18.424, type: 'Gateway Port', code: 'CPT' },
   { name: 'Bremerhaven Port', lat: 53.540, lng: 8.580, type: 'Gateway Port', code: 'BRV' },
   { name: 'Christchurch Logistics', lat: -43.532, lng: 172.636, type: 'Gateway Port', code: 'CHC' },

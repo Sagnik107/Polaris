@@ -14,6 +14,7 @@ import {
   Eye,
   CheckCircle2,
   Shield,
+  ShieldCheck,
   Layers,
   Edit3,
   Trash2,
@@ -47,7 +48,7 @@ const STATUS_BADGES = {
 };
 
 // Base types
-const BASE_TYPES = ['All', 'Permanent Station', 'Research Station', 'Camp', 'Mobile Vessel', 'Refuge Pod'];
+const BASE_TYPES = ['All', 'Permanent Station', 'Research Station'];
 
 // Custom Leaflet Marker for Bases
 const createBaseMarkerIcon = (status, isSelected) => {
@@ -380,6 +381,17 @@ export const BasesPage = () => {
             <Compass className="w-4 h-4" />
             <span>{showMap ? 'Hide Polar Map' : 'Show Polar Map'}</span>
           </button>
+
+          {selectedBase && (
+            <button
+              onClick={() => fetchBaseDetails(selectedBase._id || selectedBase.code)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cyan-950/70 border border-cyan-500/50 hover:border-cyan-400 text-cyan-300 hover:text-cyan-200 text-xs font-mono transition-all cursor-pointer shadow-[0_0_12px_rgba(40,169,245,0.2)] active:scale-95"
+              title="Open complete station telemetry, crew, inventory, assets, and active alerts dossier"
+            >
+              <Eye className="w-4 h-4 text-cyan-400" />
+              <span>Station Dossier ({selectedBase.name.split(' ')[0]})</span>
+            </button>
+          )}
 
           <button
             onClick={exportBasesJson}
@@ -886,7 +898,10 @@ export const BasesPage = () => {
               <div>
                 <span className="text-[10px] text-slate-500 block uppercase font-bold">SECTOR & ELEVATION</span>
                 <span className="font-bold text-slate-200 mt-1 block">{detailedBase.location}</span>
-                <span className="text-[10px] text-slate-400 mt-0.5 block">{detailedBase.elevationMeters || 100}m ASL • {detailedBase.type}</span>
+                <span className="text-[10px] text-slate-400 mt-0.5 block">{detailedBase.elevationMeters || 0}m ASL • {detailedBase.type}</span>
+                <span className="text-[10px] text-cyan-400 mt-0.5 block font-mono">
+                  {detailedBase.dmsCoordinates || detailedBase.coordinates?.dms || `${detailedBase.coordinates?.lat?.toFixed(4)}°, ${detailedBase.coordinates?.lng?.toFixed(4)}°`}
+                </span>
               </div>
               <div>
                 <span className="text-[10px] text-slate-500 block uppercase font-bold">CREW OCCUPANCY</span>
@@ -1075,7 +1090,23 @@ export const BasesPage = () => {
               </div>
             )}
 
-            <div className="flex justify-end pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDetailModal(false);
+                  openSosModal({
+                    baseName: detailedBase.name,
+                    location: `${detailedBase.name} (${detailedBase.location})`,
+                    severity: (detailedBase.operationalStatus === 'Critical' || detailedBase.status === 'Critical') ? 'Critical' : 'High',
+                  });
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white font-bold transition-all cursor-pointer text-xs"
+              >
+                <Radio className="w-3.5 h-3.5" />
+                <span>Scramble SOS Dispatch</span>
+              </button>
+
               <button
                 onClick={() => setShowDetailModal(false)}
                 className="px-5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer font-bold"
@@ -1101,7 +1132,7 @@ export const BasesPage = () => {
               <input
                 type="text"
                 required
-                placeholder="e.g. Dakshin Gangotri Refuge Outpost"
+                placeholder="e.g. Maitri Polar Outpost"
                 value={newBase.name}
                 onChange={(e) => setNewBase({ ...newBase, name: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-cyan-500"

@@ -16,7 +16,7 @@ router.get('/stats', requireAuth, getBaseStats);
 router.get('/', requireAuth, getBases);
 router.get('/:id', requireAuth, getBase);
 router.post('/', requireAuth, requireRole('SuperAdmin'), createBase);
-router.put('/:id', requireAuth, updateBase);
+router.put('/:id', requireAuth, requireRole('SuperAdmin', 'BaseOfficer'), updateBase);
 router.delete('/:id', requireAuth, requireRole('SuperAdmin'), deleteBase);
 
 module.exports = router;

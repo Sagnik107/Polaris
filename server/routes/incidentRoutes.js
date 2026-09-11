@@ -1,5 +1,6 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/authMiddleware');
+const { requireRole } = require('../middleware/roleMiddleware');
 const {
   getIncidents,
   getIncidentStats,
@@ -13,10 +14,10 @@ const router = express.Router();
 
 router.get('/', requireAuth, getIncidents);
 router.get('/stats', requireAuth, getIncidentStats);
-router.post('/sos', requireAuth, dispatchSosIncident);
-router.post('/:id/dispatch', requireAuth, dispatchSosIncident);
+router.post('/sos', requireAuth, requireRole('SuperAdmin', 'MedicalOfficer', 'BaseOfficer'), dispatchSosIncident);
+router.post('/:id/dispatch', requireAuth, requireRole('SuperAdmin', 'MedicalOfficer', 'BaseOfficer'), dispatchSosIncident);
 router.get('/:id', requireAuth, getIncident);
-router.post('/', requireAuth, createIncident);
-router.put('/:id', requireAuth, updateIncident);
+router.post('/', requireAuth, requireRole('SuperAdmin', 'MedicalOfficer', 'BaseOfficer'), createIncident);
+router.put('/:id', requireAuth, requireRole('SuperAdmin', 'MedicalOfficer', 'BaseOfficer'), updateIncident);
 
 module.exports = router;

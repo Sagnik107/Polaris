@@ -30,7 +30,6 @@ export const AnalyticsPage = () => {
     { base: 'Maitri', stock: 18500, min: 12000 },
     { base: 'Bharati', stock: 28000, min: 8000 },
     { base: 'Himadri', stock: 6500, min: 3000 },
-    { base: 'RV Bharati', stock: 22000, min: 7000 },
   ];
 
   const cargoStatusData = [

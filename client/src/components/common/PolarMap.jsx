@@ -29,12 +29,10 @@ export const PolarMap = ({
   height = '420px',
   routes = [],
 }) => {
-  // Sample polar route vectors between bases
+  // Standard polar route vectors between Antarctic stations
   const defaultRoutes = [
-    // Bharati to Maitri flight/traverse path
-    [[-69.407, 76.191], [-67.0, 45.0], [-70.767, 11.733]],
-    // Maitri to Southern Ocean Vessel
-    [[-70.767, 11.733], [-65.2, 45.3]],
+    // Bharati to Maitri Antarctic transit corridor
+    [[-69.4068, 76.1953], [-67.0, 45.0], [-70.7661, 11.7322]],
   ];
 
   const displayRoutes = routes.length > 0 ? routes : defaultRoutes;

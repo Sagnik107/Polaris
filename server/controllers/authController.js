@@ -37,8 +37,9 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (mongoose.connection.readyState !== 1) {
-      const mockUser = mockUsers.find((u) => u.email === email);
-      if (mockUser && password === 'Polaris@2026') {
+      const mockUser = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      const isPasswordMatch = password === 'Polaris@2026' || (mockUser?.password && mockUser.password === password);
+      if (mockUser && isPasswordMatch) {
         const userStatus = mockUser.status || (mockUser.isActive ? 'Active' : 'Inactive');
         if (userStatus === 'Suspended') {
           return res.status(403).json({ success: false, message: 'Account is suspended. Contact polar command authority.' });

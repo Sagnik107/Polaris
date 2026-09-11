@@ -63,33 +63,22 @@
   <line x1="54" y1="32" x2="60" y2="32" stroke="#7bd0ff" stroke-width="1.5" stroke-linecap="round"/>
 
   <!-- 4 Secondary Intercardinal Star Rays -->
-  <!-- NE Ray -->
   <polygon points="32,32 37,27 48,16 39,25" fill="#1b5a88" opacity="0.9"/>
   <polygon points="32,32 39,25 48,16 35,29" fill="#389fd6" opacity="0.9"/>
-  <!-- NW Ray -->
   <polygon points="32,32 27,27 16,16 25,25" fill="#389fd6" opacity="0.9"/>
   <polygon points="32,32 25,25 16,16 29,29" fill="#1b5a88" opacity="0.9"/>
-  <!-- SE Ray -->
   <polygon points="32,32 37,37 48,48 39,39" fill="#389fd6" opacity="0.9"/>
   <polygon points="32,32 39,39 48,48 35,35" fill="#1b5a88" opacity="0.9"/>
-  <!-- SW Ray -->
   <polygon points="32,32 27,37 16,48 25,39" fill="#1b5a88" opacity="0.9"/>
   <polygon points="32,32 25,39 16,48 29,35" fill="#389fd6" opacity="0.9"/>
 
   <!-- 4 Primary Cardinal Star Rays (Faceted 3D) -->
-  <!-- North Ray -->
   <polygon points="32,7 32,32 26.5,32" fill="url(#starNorthA)"/>
   <polygon points="32,7 37.5,32 32,32" fill="url(#starNorthB)"/>
-
-  <!-- South Ray -->
   <polygon points="32,57 32,32 26.5,32" fill="url(#starSouthA)"/>
   <polygon points="32,57 37.5,32 32,32" fill="url(#starSouthB)"/>
-
-  <!-- East Ray -->
   <polygon points="57,32 32,26.5 32,32" fill="url(#starEastA)"/>
   <polygon points="57,32 32,32 32,37.5" fill="url(#starEastB)"/>
-
-  <!-- West Ray -->
   <polygon points="7,32 32,26.5 32,32" fill="url(#starWestA)"/>
   <polygon points="7,32 32,32 32,37.5" fill="url(#starWestB)"/>
 

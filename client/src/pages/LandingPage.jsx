@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PolarisLogo from '../components/common/PolarisLogo';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
@@ -91,22 +91,13 @@ export const LandingPage = () => {
         {/* Top Navigation Bar */}
         <header className="sticky top-0 w-full h-16 border-b border-border-default bg-surface-1/90 backdrop-blur-md z-50">
           <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
-            {/* Brand / Identity with Ice-Blue Star Beacon */}
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-              <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-surface-2 border border-border-strong shadow-[0_0_16px_rgba(40,169,245,0.35)]">
-                <span className="material-symbols-outlined text-ice-400 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  explore
-                </span>
-                <div className="absolute w-1.5 h-1.5 rounded-full bg-aurora-400 animate-ping" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold tracking-widest text-text-primary text-base font-display">POLARIS</span>
-                  <span className="text-[10px] font-mono text-ice-400 border border-ice-400/30 px-1.5 py-0.5 rounded bg-surface-3">C2</span>
-                </div>
-                <span className="text-[9px] font-mono tracking-wider text-text-muted">ARCTIC COMMAND &amp; CONTROL</span>
-              </div>
-            </div>
+            {/* Brand / Identity with Unified Polaris Insignia */}
+            <PolarisLogo
+              className="w-8 h-8"
+              withText={true}
+              subtitle="ARCTIC COMMAND &amp; CONTROL"
+              onClick={() => navigate('/')}
+            />
 
             {/* Center Navigation Links */}
             <nav className="hidden md:flex items-center gap-8">
@@ -137,7 +128,10 @@ export const LandingPage = () => {
                     <span className="material-symbols-outlined text-sm">dashboard</span>
                   </button>
                   <button
-                    onClick={() => logout()}
+                    onClick={async () => {
+                      await logout();
+                      navigate('/', { replace: true });
+                    }}
                     className="p-2 rounded-lg bg-surface-1 hover:bg-surface-2 text-text-muted hover:text-danger border border-border-default transition-colors text-xs"
                     title="Log Out"
                   >
@@ -518,7 +512,7 @@ export const LandingPage = () => {
           <footer className="w-full border-t border-border-default bg-surface-1 py-10 mt-auto">
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-ice-400 text-xl">ac_unit</span>
+                <PolarisLogo className="w-6 h-6" glow={false} />
                 <span className="text-sm font-semibold text-text-primary tracking-wider">POLARIS ARCTIC C2 OPERATIONS</span>
                 <span className="text-border-default">|</span>
                 <span className="text-text-muted text-xs">Standardized Antarctic &amp; Arctic Logistics Framework</span>

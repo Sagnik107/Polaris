@@ -38,10 +38,9 @@ const EXPEDITION_PHOTOS = [
 ];
 
 const BASES_LIST = [
-  { id: 'Maitri Station', name: 'Maitri Station (70°45\'S)' },
-  { id: 'Bharati Station', name: 'Bharati Station (69°24\'S)' },
-  { id: 'Himadri Station', name: 'Himadri Station (78°55\'N)' },
-  { id: 'RV Bharati', name: 'RV Bharati (Research Vessel)' },
+  { id: 'Maitri Station', name: 'Maitri Station (70°45′58″S, 11°43′56″E)' },
+  { id: 'Bharati Station', name: 'Bharati Station (69°24.41′S, 76°11.72′E)' },
+  { id: 'Himadri Station', name: 'Himadri Station (78°55′N, 11°56′E)' },
 ];
 
 const TYPES_LIST = [
@@ -461,7 +460,6 @@ export const ExpeditionsPage = () => {
                 <option value="Maitri" className="bg-polar-900 text-text-primary">Maitri</option>
                 <option value="Bharati" className="bg-polar-900 text-text-primary">Bharati</option>
                 <option value="Himadri" className="bg-polar-900 text-text-primary">Himadri</option>
-                <option value="RV Bharati" className="bg-polar-900 text-text-primary">RV Bharati</option>
               </select>
             </div>
 

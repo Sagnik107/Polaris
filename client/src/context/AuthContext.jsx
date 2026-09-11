@@ -57,12 +57,17 @@ export const AuthProvider = ({ children }) => {
       await api.post('/auth/logout');
     } catch (err) {
       console.warn('Logout API error:', err);
+    } finally {
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('polaris_token');
+      localStorage.removeItem('polaris_user');
+      try {
+        sessionStorage.clear();
+      } catch {}
+      delete api.defaults.headers.common['Authorization'];
+      disconnectSocket();
     }
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('polaris_token');
-    localStorage.removeItem('polaris_user');
-    disconnectSocket();
   };
 
   const hasRole = (...roles) => {

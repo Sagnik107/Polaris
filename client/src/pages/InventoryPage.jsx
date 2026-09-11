@@ -805,11 +805,9 @@ export const InventoryPage = () => {
                   className="w-full px-3 py-2 bg-polar-850 border border-border-default rounded-lg text-text-primary focus:outline-none focus:border-border-focus cursor-pointer"
                 >
                   <option value="all">Station: All Polar Outposts</option>
-                  <option value="Maitri">Maitri Base (70°45'S)</option>
-                  <option value="Bharati">Bharati Station (69°24'S)</option>
-                  <option value="Himadri">Himadri Station (78°55'N)</option>
-                  <option value="Larsemann">Larsemann Depot</option>
-                  <option value="Vessel">RV Bharati Icebreaker</option>
+                  <option value="Maitri">Maitri Station (70°45′58″S, 11°43′56″E)</option>
+                  <option value="Bharati">Bharati Station (69°24.41′S, 76°11.72′E)</option>
+                  <option value="Himadri">Himadri Station (78°55′N, 11°56′E)</option>
                 </select>
               </div>
 
@@ -1742,11 +1740,9 @@ export const InventoryPage = () => {
                 onChange={(e) => setNewInv({ ...newInv, baseName: e.target.value })}
                 className="w-full p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
               >
-                <option value="Maitri Station">Maitri Station (70°45'S)</option>
-                <option value="Bharati Station">Bharati Station (69°24'S)</option>
-                <option value="Himadri Station">Himadri Station (78°55'N)</option>
-                <option value="Larsemann Depot">Larsemann Depot</option>
-                <option value="RV Bharati">RV Bharati Icebreaker</option>
+                <option value="Maitri Station">Maitri Station (70°45′58″S, 11°43′56″E)</option>
+                <option value="Bharati Station">Bharati Station (69°24.41′S, 76°11.72′E)</option>
+                <option value="Himadri Station">Himadri Station (78°55′N, 11°56′E)</option>
               </select>
             </div>
             <div>
@@ -1914,8 +1910,6 @@ export const InventoryPage = () => {
                 <option value="Bharati Station">Bharati Station</option>
                 <option value="Maitri Station">Maitri Station</option>
                 <option value="Himadri Station">Himadri Station</option>
-                <option value="Larsemann Depot">Larsemann Depot</option>
-                <option value="RV Bharati">RV Bharati Icebreaker</option>
               </select>
             </div>
           </div>

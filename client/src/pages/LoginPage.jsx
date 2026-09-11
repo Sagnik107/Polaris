@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PolarisLogo from '../components/common/PolarisLogo';
 
 export const LoginPage = () => {
   const { login } = useAuth();
@@ -85,6 +86,21 @@ export const LoginPage = () => {
     handleSignIn();
   };
 
+  const handleInstantAdmin = async () => {
+    setError('');
+    setIsLoading(true);
+    setMissionId('admin@polaris.aq');
+    setSecurityKey('Polaris@2026');
+    try {
+      await login('admin@polaris.aq', 'Polaris@2026');
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Instant Admin authentication failed.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="bg-polar-950 text-text-primary antialiased min-h-screen relative flex flex-col justify-between overflow-x-hidden select-none font-body">
       {/* Atmospheric Polar Aurora and Abyssal Lights */}
@@ -108,24 +124,16 @@ export const LoginPage = () => {
 
       {/* Top System Telemetry Bar (Standalone Authentication Context) */}
       <header className="relative z-10 w-full px-6 py-4 flex items-center justify-between border-b border-border-default bg-surface-1 backdrop-blur-md">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-8 h-8 rounded-lg bg-polar-800 border border-border-strong flex items-center justify-center text-ice-400 shadow-[0_0_12px_rgba(40,169,245,0.2)]">
-            <span className="material-symbols-outlined text-[18px]">ac_unit</span>
-          </div>
-          <div>
-            <div className="font-headline text-lg tracking-wider text-text-primary flex items-center gap-2 font-bold">
-              <span>POLARIS</span>
-              <span className="text-[10px] font-mono text-aurora-400 bg-aurora-500/10 border border-aurora-400/30 px-1.5 py-0.5 rounded">
-                C2 v4.2
-              </span>
-            </div>
-            <p className="text-[10px] font-mono text-text-muted hidden sm:block">ARCTIC HIGH-LATITUDE OPERATIONAL SYSTEM</p>
-          </div>
-        </div>
+        <PolarisLogo
+          className="w-8 h-8"
+          withText={true}
+          subtitle="ARCTIC HIGH-LATITUDE OPERATIONAL SYSTEM"
+          onClick={() => navigate('/')}
+        />
 
-        {/* Live Telemetry Status Readout */}
-        <div className="flex items-center gap-4 font-mono text-xs">
-          <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-surface-2 border border-border-default text-ice-300">
+        {/* Live Telemetry Status Readout & Instant Admin Beacon */}
+        <div className="flex items-center gap-3 font-mono text-xs">
+          <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-surface-2 border border-border-default text-ice-300">
             <span className="w-2 h-2 rounded-full bg-aurora-400 shadow-[0_0_8px_rgba(41,214,176,0.8)] animate-ping" />
             <span>LAT: 78°13'N</span>
             <span className="text-text-muted">•</span>
@@ -133,10 +141,24 @@ export const LoginPage = () => {
             <span className="text-text-muted">•</span>
             <span className="text-aurora-400">ENC: AES-256-GCM</span>
           </div>
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-container border border-border-default text-text-secondary">
+
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-container border border-border-default text-text-secondary">
             <span className="material-symbols-outlined text-[14px] text-ice-400">lock</span>
             <span>GATEWAY SECURE</span>
           </div>
+
+          {/* Instant Admin Access Button */}
+          <button
+            type="button"
+            onClick={handleInstantAdmin}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-950/80 to-[#0A2940] border border-rose-500/50 hover:border-rose-400 text-rose-300 hover:text-rose-200 text-xs font-mono font-bold shadow-[0_0_15px_rgba(244,63,94,0.3)] hover:shadow-[0_0_20px_rgba(244,63,94,0.5)] transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Authenticate instantly with verified SuperAdmin credentials via secure API"
+          >
+            <span className="material-symbols-outlined text-[16px] text-rose-400 animate-pulse">admin_panel_settings</span>
+            <span>Instant Admin Access</span>
+            <span className="px-1.5 py-0.2 rounded bg-rose-500/30 text-rose-200 text-[9px] uppercase tracking-wider">C2</span>
+          </button>
         </div>
       </header>
 
@@ -152,14 +174,8 @@ export const LoginPage = () => {
 
           {/* Card Header: Insignia & Brand Description */}
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-polar-850 border border-border-strong shadow-[0_0_20px_rgba(40,169,245,0.25)] mb-3 relative group">
-              <span
-                className="material-symbols-outlined text-[28px] text-ice-400"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                radar
-              </span>
-              <span className="absolute inset-0 rounded-xl border border-aurora-400/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex justify-center mb-3">
+              <PolarisLogo className="w-14 h-14" glow={true} />
             </div>
             <h1 className="font-headline text-lg font-bold text-ice-400 tracking-widest uppercase mb-0.5">POLARIS</h1>
             <p className="text-[10px] font-mono text-text-muted tracking-wider uppercase mb-3">

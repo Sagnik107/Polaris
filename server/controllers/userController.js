@@ -379,10 +379,11 @@ const updateUser = async (req, res, next) => {
   }
 };
 
-// DELETE /api/users/:id (Soft-delete / Decommission User)
+// DELETE /api/users/:id (Soft-delete or Purge User)
 const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const { purge } = req.query;
     const currentUserId = req.user?._id?.toString();
 
     // Prevent self-delete
@@ -398,18 +399,44 @@ const deleteUser = async (req, res, next) => {
       const userIndex = mockUsers.findIndex((u) => u._id.toString() === id.toString());
       if (userIndex === -1) return res.status(404).json({ success: false, message: 'User not found.' });
 
+      const userName = mockUsers[userIndex].name;
+
+      if (purge === 'true') {
+        mockUsers.splice(userIndex, 1);
+        return res.json({
+          success: true,
+          message: `User record for ${userName} purged permanently from polar database.`,
+        });
+      }
+
       // Soft-delete in mock
       mockUsers[userIndex].status = 'Inactive';
       mockUsers[userIndex].isActive = false;
 
       return res.json({
         success: true,
-        message: `Account for ${mockUsers[userIndex].name} decommissioned successfully (status: Inactive).`,
+        message: `Account for ${userName} decommissioned successfully (status: Inactive).`,
       });
     }
 
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+    if (purge === 'true') {
+      await User.findByIdAndDelete(id);
+      await ActivityLog.create({
+        actor: req.user?._id || user._id,
+        actorName: req.user?.name || 'Administrator',
+        action: 'USER_PURGED',
+        entityType: 'User',
+        entityId: user._id,
+        description: `Permanently purged user account ${user.name} (${user.email})`,
+      });
+      return res.json({
+        success: true,
+        message: `User record for ${user.name} purged permanently from polar database.`,
+      });
+    }
 
     user.status = 'Inactive';
     user.isActive = false;
@@ -433,4 +460,55 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-module.exports = { getUsers, getUser, createUser, updateUser, deleteUser };
+// POST /api/users/:id/reset-password (SuperAdmin resetting credentials)
+const resetPassword = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Security Policy: Password must be at least 6 characters.',
+      });
+    }
+
+    // Mock Mode
+    if (mongoose.connection.readyState !== 1) {
+      const userIndex = mockUsers.findIndex((u) => u._id.toString() === id.toString());
+      if (userIndex === -1) return res.status(404).json({ success: false, message: 'User not found.' });
+
+      mockUsers[userIndex].password = password;
+
+      return res.json({
+        success: true,
+        message: `Security credentials for ${mockUsers[userIndex].name} reset successfully.`,
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+    user.passwordHash = password;
+    user.refreshToken = null; // Invalidate current session
+    await user.save();
+
+    await ActivityLog.create({
+      actor: req.user?._id || user._id,
+      actorName: req.user?.name || 'SuperAdmin',
+      action: 'USER_PASSWORD_RESET',
+      entityType: 'User',
+      entityId: user._id,
+      description: `Cryptographic passkey reset for ${user.name} (${user.email}) by administrator`,
+    });
+
+    res.json({
+      success: true,
+      message: `Security credentials for ${user.name} reset successfully.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getUsers, getUser, createUser, updateUser, deleteUser, resetPassword };

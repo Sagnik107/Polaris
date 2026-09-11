@@ -6,6 +6,7 @@ import { useEmergency } from '../context/EmergencyContext';
 import EmergencyBanner from '../components/common/EmergencyBanner';
 import Modal from '../components/common/Modal';
 import SosDispatchModal from '../components/emergency/SosDispatchModal';
+import PolarisLogo from '../components/common/PolarisLogo';
 
 export const AppLayout = () => {
   const { user, logout, hasRole } = useAuth();
@@ -26,7 +27,7 @@ export const AppLayout = () => {
     } catch (err) {
       console.warn('Logout error:', err);
     } finally {
-      navigate('/login');
+      navigate('/', { replace: true });
     }
   };
 
@@ -53,22 +54,25 @@ export const AppLayout = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const navItems = [
+  const allNavItems = [
     { label: 'Command Dashboard', path: '/dashboard', icon: 'dashboard', activeDot: true },
-    { label: 'Expeditions', path: '/expeditions', icon: 'explore', badge: '3' },
-    { label: 'Cargo Tracking', path: '/cargo', icon: 'local_shipping', badge: '12' },
-    { label: 'Inventory & Assets', path: '/inventory', icon: 'inventory_2' },
-    { label: 'Personnel', path: '/personnel', icon: 'badge', statusDot: true },
-    { label: 'Base Management', path: '/bases', icon: 'domain' },
-    { label: 'Emergency Center', path: '/emergency', icon: 'emergency', isDanger: true, badge: 'LVL 2' },
-    { label: 'Tasks', path: '/tasks', icon: 'task_alt' },
+    { label: 'Expeditions', path: '/expeditions', icon: 'explore', badge: '3', roles: ['SuperAdmin', 'ExpeditionManager', 'Viewer'] },
+    { label: 'Cargo Tracking', path: '/cargo', icon: 'local_shipping', badge: '12', roles: ['SuperAdmin', 'LogisticsCoordinator', 'Viewer'] },
+    { label: 'Inventory & Assets', path: '/inventory', icon: 'inventory_2', roles: ['SuperAdmin', 'LogisticsCoordinator', 'InventoryManager', 'BaseOfficer', 'MedicalOfficer', 'Viewer'] },
+    { label: 'Personnel', path: '/personnel', icon: 'badge', statusDot: true, roles: ['SuperAdmin', 'PersonnelManager', 'ExpeditionManager', 'BaseOfficer', 'MedicalOfficer', 'Viewer'] },
+    { label: 'Base Management', path: '/bases', icon: 'domain', roles: ['SuperAdmin', 'BaseOfficer', 'ExpeditionManager', 'LogisticsCoordinator', 'Viewer'] },
+    { label: 'Emergency Center', path: '/emergency', icon: 'emergency', isDanger: true, badge: 'LVL 2', roles: ['SuperAdmin', 'MedicalOfficer', 'BaseOfficer'] },
+    { label: 'Tasks', path: '/tasks', icon: 'task_alt', roles: ['SuperAdmin', 'ExpeditionManager', 'LogisticsCoordinator', 'InventoryManager', 'BaseOfficer', 'MedicalOfficer', 'PersonnelManager', 'Viewer'] },
     { label: 'Alerts & Analytics', path: '/alerts', icon: 'insights', badge: unreadAlertsCount > 0 ? `${unreadAlertsCount}` : '4', isWarning: true },
     { label: 'Reports', path: '/reports', icon: 'description' },
+    { label: 'User Admin', path: '/users', icon: 'admin_panel_settings', roles: ['SuperAdmin'] },
   ];
 
-  if (hasRole('SuperAdmin')) {
-    navItems.push({ label: 'User Admin', path: '/users', icon: 'admin_panel_settings' });
-  }
+  const userRole = user?.role || 'Viewer';
+  const navItems = allNavItems.filter((item) => {
+    if (!item.roles) return true;
+    return item.roles.includes(userRole);
+  });
 
   // Quick search routes
   const searchResults = [
@@ -100,18 +104,8 @@ export const AppLayout = () => {
         {/* Top Branding & Navigation Items */}
         <div className="flex flex-col gap-5">
           {/* SideNav Header & Insignia */}
-          <div className="flex items-center gap-3 px-2 py-1 cursor-pointer" onClick={() => navigate('/dashboard')}>
-            <div className="w-9 h-9 rounded-lg bg-[rgba(12,39,60,0.96)] border border-[rgba(75,177,235,0.42)] flex items-center justify-center shadow-[0_0_12px_rgba(40,169,245,0.3)]">
-              <span className="material-symbols-outlined text-[#43B8FF]">hub</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-base font-bold tracking-widest text-[#43B8FF] font-['Space_Grotesk']">
-                POLARIS
-              </span>
-              <span className="text-[10px] text-[#6E8498] tracking-wider font-mono">
-                ARCTIC C2 INTEL v4.2
-              </span>
-            </div>
+          <div className="px-2 py-1 cursor-pointer" onClick={() => navigate('/dashboard')}>
+            <PolarisLogo className="w-9 h-9" withText={true} subtitle="ARCTIC C2 INTEL v4.2" />
           </div>
 
           {/* Navigation Tab List */}
@@ -477,8 +471,8 @@ export const AppLayout = () => {
           <div className="fixed inset-0 bg-[#020914]/80 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
           <div className="relative w-64 bg-[#082033] h-full p-4 flex flex-col z-10 border-r border-[rgba(130,190,225,0.18)]">
             <div className="flex items-center justify-between pb-4 border-b border-[rgba(130,190,225,0.18)]">
-              <span className="font-bold text-lg text-[#43B8FF] font-['Space_Grotesk']">POLARIS</span>
-              <button onClick={() => setMobileMenuOpen(false)} className="text-[#A9BDD0]">
+              <PolarisLogo className="w-8 h-8" withText={true} />
+              <button onClick={() => setMobileMenuOpen(false)} className="text-[#A9BDD0] p-1">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>

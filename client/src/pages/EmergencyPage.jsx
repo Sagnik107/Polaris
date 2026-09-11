@@ -116,8 +116,7 @@ export const EmergencyPage = () => {
   const BASES = [
     'Maitri Station',
     'Bharati Station',
-    'Dakshin Gangotri Ice Camp',
-    'Larsemann Logistics Ridge',
+    'Himadri Station',
   ];
 
   // Fetch incidents & summary stats

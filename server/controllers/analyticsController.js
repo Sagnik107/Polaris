@@ -20,7 +20,6 @@ const mockAnalyticsOverview = {
     { base: 'Maitri', stock: 18500, min: 12000, capacity: 35000, unit: 'Liters' },
     { base: 'Bharati', stock: 28000, min: 8000, capacity: 45000, unit: 'Liters' },
     { base: 'Himadri', stock: 6500, min: 3000, capacity: 12000, unit: 'Liters' },
-    { base: 'RV Bharati', stock: 22000, min: 7000, capacity: 30000, unit: 'Liters' },
   ],
   cargoStatus: [
     { name: 'Delivered', value: 38, color: '#31d49a' },
@@ -32,7 +31,6 @@ const mockAnalyticsOverview = {
     { base: 'Maitri Station', critical: 1, high: 1, warning: 0 },
     { base: 'Bharati Station', critical: 1, high: 1, warning: 1 },
     { base: 'Himadri Station', critical: 0, high: 0, warning: 1 },
-    { base: 'RV Bharati', critical: 0, high: 0, warning: 1 },
   ],
   hourlyAlertVolume: [
     { time: '00:00', critical: 0, high: 1, warning: 0 },

@@ -40,10 +40,9 @@ const DISPATCH_VEHICLES = [
 ];
 
 const BASES = [
-  { name: 'Maitri Station', sector: 'Schirmacher Oasis', coords: "70°45'S 11°44'E" },
-  { name: 'Bharati Station', sector: 'Larsemann Hills', coords: "69°24'S 76°11'E" },
-  { name: 'Dakshin Gangotri Ice Camp', sector: 'Historical Ice Shelf', coords: "70°05'S 12°00'E" },
-  { name: 'Larsemann Logistics Ridge', sector: 'East Ridge Depot', coords: "69°26'S 76°18'E" },
+  { name: 'Maitri Station', sector: 'Schirmacher Oasis, Antarctica', coords: '70°45′58″S, 11°43′56″E' },
+  { name: 'Bharati Station', sector: 'Larsemann Hills, Antarctica', coords: '69°24.41′S, 76°11.72′E' },
+  { name: 'Himadri Station', sector: 'Ny-Ålesund, Svalbard, Norway', coords: '78°55′N, 11°56′E' },
 ];
 
 export const SosDispatchModal = () => {

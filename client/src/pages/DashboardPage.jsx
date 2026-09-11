@@ -5,6 +5,7 @@ import { useSocket } from '../context/SocketContext';
 import { useEmergency } from '../context/EmergencyContext';
 import { getSocket } from '../services/socket';
 import Modal from '../components/common/Modal';
+import PolarisLogo from '../components/common/PolarisLogo';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
@@ -327,7 +328,7 @@ export const DashboardPage = () => {
     maitri: {
       name: 'Maitri Station',
       code: 'MAITRI',
-      coords: '70°45\'58" S, 11°44\'09" E',
+      coords: '70°45′58″S, 11°43′56″E',
       type: 'Permanent Antarctic Station',
       temp: '-18°C',
       wind: '24 kt ENE',
@@ -342,7 +343,7 @@ export const DashboardPage = () => {
     bharati: {
       name: 'Bharati Station',
       code: 'BHARATI',
-      coords: '69°24\'25" S, 76°11\'28" E',
+      coords: '69°24.41′S, 76°11.72′E',
       type: 'Modern Energy-Efficient Hub',
       temp: '-22°C',
       wind: '18 kt S',
@@ -354,25 +355,10 @@ export const DashboardPage = () => {
       status: '100% Operational',
       statusColor: 'text-aurora-400',
     },
-    larsemann: {
-      name: 'Larsemann Hills Field Array',
-      code: 'REFUGE-POD',
-      coords: '69°23\'40" S, 76°08\'15" E',
-      type: 'Automated Scientific Refuge Pod',
-      temp: '-34°C',
-      wind: '74 kt Gale',
-      pressure: '988 hPa',
-      crew: 6,
-      capacity: 12,
-      power: 'Micro-Turbine & Solar Bank (Emergency Mode)',
-      fuel: 'Emergency Reserve 4,200 L',
-      status: 'GALE SHELTER PROTOCOL',
-      statusColor: 'text-danger',
-    },
     himadri: {
       name: 'Himadri Station',
       code: 'HIMADRI',
-      coords: '78°55\'26" N, 11°55\'41" E',
+      coords: '78°55′N, 11°56′E',
       type: 'Arctic Research Station (Svalbard)',
       temp: '-8°C',
       wind: '12 kt NW',
@@ -383,21 +369,6 @@ export const DashboardPage = () => {
       fuel: '16,000 L Backup Vault',
       status: 'Nominal Research Operations',
       statusColor: 'text-aurora-400',
-    },
-    rvBharati: {
-      name: 'RV Bharati Research Vessel',
-      code: 'RV-BHARATI',
-      coords: '65°12\'00" S, 45°18\'00" E',
-      type: 'Ice-Class Mobile Polar Vessel',
-      temp: '-4°C',
-      wind: '32 kt WSW',
-      pressure: '996 hPa',
-      crew: 28,
-      capacity: 50,
-      power: 'Twin Marine Diesels 4,800 kW',
-      fuel: 'Marine Gas Oil 680,000 L',
-      status: 'Sea-Ice Transit Corridor',
-      statusColor: 'text-ice-300',
     },
   };
 
@@ -450,6 +421,7 @@ export const DashboardPage = () => {
             <span className="text-ice-400 font-semibold">Command Dashboard</span>
           </div>
           <h1 className="font-headline text-2xl lg:text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
+            <PolarisLogo className="w-8 h-8" glow={true} />
             <span>Polar Mission Command</span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-aurora-500/10 text-aurora-400 border border-aurora-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-aurora-400 animate-pulse" />
@@ -1167,32 +1139,7 @@ export const DashboardPage = () => {
               </div>
 
               {/* INTERACTIVE BASE NODE 3: LARSEMANN HILLS */}
-              <div
-                onClick={() => {
-                  setSelectedMapStation('larsemann');
-                  setStationHudOpen(true);
-                }}
-                className="absolute top-[320px] left-[710px] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer transition-transform hover:scale-125 z-20"
-                title="Click to inspect Larsemann Hills Array"
-              >
-                <div className="relative flex items-center justify-center">
-                  <div className="absolute w-12 h-12 rounded-full bg-warning/30 animate-ping" />
-                  <div className="w-4 h-4 rounded-full bg-warning border-2 border-polar-950 shadow-[0_0_14px_#F6C85F] z-10 flex items-center justify-center">
-                    <span className="w-1 h-1 rounded-full bg-polar-950" />
-                  </div>
-                </div>
-                <div className="absolute left-6 -top-5 whitespace-nowrap bg-surface-3/95 backdrop-blur-md border border-warning/50 px-2.5 py-1.5 rounded-lg shadow-xl pointer-events-auto">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-mono font-bold text-warning">LARSEMANN REFUGE</span>
-                    <span className="text-[9px] font-mono text-danger px-1 bg-danger/20 rounded">BLIZZARD</span>
-                  </div>
-                  <div className="font-mono text-[10px] text-text-muted">
-                    Crew: 6 (Sheltered) • -34°C • 74kt
-                  </div>
-                </div>
-              </div>
-
-              {/* INTERACTIVE BASE NODE 4: HIMADRI */}
+              {/* INTERACTIVE BASE NODE 3: HIMADRI */}
               <div
                 onClick={() => {
                   setSelectedMapStation('himadri');
@@ -1208,30 +1155,11 @@ export const DashboardPage = () => {
                   HIMADRI (Arctic Ny-Ålesund) • -8°C
                 </div>
               </div>
-
-              {/* INTERACTIVE BASE NODE 5: RV BHARATI */}
-              <div
-                onClick={() => {
-                  setSelectedMapStation('rvBharati');
-                  setStationHudOpen(true);
-                }}
-                className="absolute top-[390px] left-[380px] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer transition-transform hover:scale-125 z-20"
-                title="Click to inspect RV Bharati Vessel"
-              >
-                <div className="relative flex items-center justify-center">
-                  <div className="w-3.5 h-3.5 rounded-full bg-ice-300 border border-polar-950 shadow-[0_0_10px_#43B8FF] z-10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[10px] text-polar-950">directions_boat</span>
-                  </div>
-                </div>
-                <div className="absolute left-5 -top-2 whitespace-nowrap bg-surface-2/95 backdrop-blur-md border border-border-default px-2 py-0.5 rounded text-[10px] font-mono text-ice-300 pointer-events-auto">
-                  RV BHARATI (Southern Ocean)
-                </div>
-              </div>
             </div>
 
             {/* Coordinate HUD Labels */}
             <div className="absolute top-3 left-4 font-mono text-[10px] text-text-muted space-y-0.5 pointer-events-none">
-              <p>LAT: 70°45'58" S | LON: 11°44'09" E</p>
+              <p>LAT: 70°45′58″ S | LON: 11°43′56″ E</p>
               <p>ELEV: 117m • ICE THICKNESS: 2,420m</p>
             </div>
 
@@ -1515,7 +1443,6 @@ export const DashboardPage = () => {
                 <option value="Bharati Station">Bharati Station (Larsemann Hills)</option>
                 <option value="Maitri Station">Maitri Station (Schirmacher Oasis)</option>
                 <option value="Himadri Station">Himadri Station (Arctic Svalbard)</option>
-                <option value="RV Bharati">RV Bharati (Southern Ocean Vessel)</option>
               </select>
             </div>
           </div>
