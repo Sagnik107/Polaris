@@ -1,5 +1,9 @@
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
+
 // In-memory fallback dataset so POLARIS is 100% operational even without a running local MongoDB instance
-const mockBases = [
+let mockBases = [
   {
     _id: '67cda0000000000000000001',
     name: 'Maitri Station',
@@ -50,7 +54,7 @@ const mockBases = [
   },
 ];
 
-const mockUsers = [
+let mockUsers = [
   { _id: '67cda1000000000000000001', name: 'Commander Sarah Jenkins', email: 'admin@polaris.aq', role: 'SuperAdmin', isActive: true },
   { _id: '67cda1000000000000000002', name: 'Dr. Rajesh Sharma', email: 'expeditions@polaris.aq', role: 'ExpeditionManager', isActive: true },
   { _id: '67cda1000000000000000003', name: 'Elena Rostova', email: 'logistics@polaris.aq', role: 'LogisticsCoordinator', isActive: true },
@@ -61,7 +65,7 @@ const mockUsers = [
   { _id: '67cda1000000000000000008', name: 'General Staff Observer', email: 'viewer@polaris.aq', role: 'Viewer', isActive: true },
 ];
 
-const mockExpeditions = [
+let mockExpeditions = [
   {
     _id: '67cda2000000000000000001',
     code: 'INAE-44',
@@ -72,6 +76,8 @@ const mockExpeditions = [
     endDate: '2026-12-20T00:00:00.000Z',
     readinessScore: 87,
     riskLevel: 'Moderate',
+    progress: 75,
+    aiRiskPrediction: 'Low probability of delay. Weather window optimal for next 7 days.',
     objectives: ['Drill 120m ice core at Amery Ice Shelf', 'Upgrade Bharati wind turbine farm', 'Map penguin colonies with UAV'],
     milestones: [
       { title: 'Base Camp Setup', dueDate: '2025-12-01', status: 'Completed' },
@@ -82,14 +88,16 @@ const mockExpeditions = [
   },
   {
     _id: '67cda2000000000000000002',
-    code: 'INAE-45',
-    name: '45th Wintering Research Mission',
-    baseName: 'Maitri Station',
+    code: 'LARSEM-2026',
+    name: 'Larsemann Hills Structural Bedrock Survey',
+    baseName: 'Bharati Station',
     status: 'Active',
     startDate: '2026-01-10T00:00:00.000Z',
     endDate: '2026-12-31T00:00:00.000Z',
     readinessScore: 62,
     riskLevel: 'High',
+    progress: 41,
+    aiRiskPrediction: '74-knot gusts causing 3-day delay. Sheltering at Refuge Pod 3.',
     objectives: ['Sustain wintering team of 25 personnel', 'Maintain ozone observation Dobson spectrophotometer'],
     milestones: [
       { title: 'Lake Pipeline Heat-Tracing', dueDate: '2026-02-01', status: 'Completed' },
@@ -107,15 +115,36 @@ const mockExpeditions = [
     endDate: '2026-09-30T00:00:00.000Z',
     readinessScore: 45,
     riskLevel: 'Low',
+    progress: 0,
+    aiRiskPrediction: 'Awaiting sensor bench calibration. No environmental risks.',
     objectives: ['Deploy multi-wavelength micro-pulse lidar', 'Quantify organic aerosols during snow melt'],
     milestones: [
       { title: 'Sensor Bench Calibration', dueDate: '2026-03-20', status: 'InProgress' },
     ],
     budget: { allocated: 1200000, spent: 180000 },
   },
+  {
+    _id: '67cda2000000000000000004',
+    code: 'RESUP-26',
+    name: 'Bharati Resupply Convoy',
+    baseName: 'Bharati Station',
+    status: 'Active',
+    startDate: '2026-02-01T00:00:00.000Z',
+    endDate: '2026-03-15T00:00:00.000Z',
+    readinessScore: 94,
+    riskLevel: 'Low',
+    progress: 92,
+    aiRiskPrediction: 'Clear corridor. Docking expected in 2h 15m.',
+    objectives: ['Antarctic Station Critical Fuel & Cryo-Logistics'],
+    milestones: [
+      { title: 'Depart Coast', dueDate: '2026-02-02', status: 'Completed' },
+      { title: 'Arrival at Station', dueDate: '2026-03-10', status: 'InProgress' },
+    ],
+    budget: { allocated: 800000, spent: 650000 },
+  },
 ];
 
-const mockCargo = [
+let mockCargo = [
   {
     _id: '67cda3000000000000000001',
     trackingNumber: 'CRG-2026-001',
@@ -146,9 +175,19 @@ const mockCargo = [
     weightKg: 320,
     items: [{ name: 'Cryogenic Specimen Containers (-80°C)', quantity: 4, unit: 'Vessels' }],
   },
+  {
+    _id: '67cda3000000000000000004',
+    trackingNumber: 'CRG-2026-004',
+    title: 'Cold-Lab Spares ATX-103',
+    category: 'Equipment',
+    priority: 'Low',
+    status: 'Delivered',
+    weightKg: 140,
+    items: [{ name: 'Spares', quantity: 2, unit: 'Crates' }],
+  },
 ];
 
-const mockInventory = [
+let mockInventory = [
   {
     _id: '67cda4000000000000000001',
     name: 'Aviation Turbine Fuel (Jet A-1 Polar Grade)',
@@ -199,7 +238,7 @@ const mockInventory = [
   },
 ];
 
-const mockAssets = [
+let mockAssets = [
   {
     _id: '67cda5000000000000000001',
     assetTag: 'AST-VEH-01',
@@ -224,14 +263,14 @@ const mockAssets = [
   },
 ];
 
-const mockPersonnel = [
+let mockPersonnel = [
   { _id: '67cda6000000000000000001', name: 'Dr. Rajesh Sharma', employeeId: 'POL-0101', role: 'Lead Glaciologist', department: 'Science', baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543210', skills: ['Ice Core Sampling', 'Cryosphere Modeling'] },
   { _id: '67cda6000000000000000002', name: 'Dr. Maya Patel', employeeId: 'POL-0102', role: 'Chief Medical Officer', department: 'Medical', baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543211', skills: ['Hypothermia Protocol', 'Tele-Surgery'] },
   { _id: '67cda6000000000000000003', name: 'Elena Rostova', employeeId: 'POL-0103', role: 'Logistics Flight Director', department: 'Logistics', baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+7-9123456789', skills: ['Air Delivery Drop', 'Cargo Manifest'] },
   { _id: '67cda6000000000000000004', name: 'Capt. Thomas Lindqvist', employeeId: 'POL-0106', role: 'Station Base Commander', department: 'Command', baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+46-701234567', skills: ['Ice Navigation', 'Hazard Mitigation'] },
 ];
 
-const mockTasks = [
+let mockTasks = [
   {
     _id: '67cda7000000000000000001',
     title: 'Emergency Generator Fuel Line Inspection',
@@ -252,7 +291,7 @@ const mockTasks = [
   },
 ];
 
-const mockIncidents = [
+let mockIncidents = [
   {
     _id: '67cda8000000000000000001',
     incidentNumber: 'INC-2026-001',
@@ -270,7 +309,7 @@ const mockIncidents = [
   },
 ];
 
-const mockAlerts = [
+let mockAlerts = [
   {
     _id: '67cda9000000000000000001',
     title: 'CRITICAL: Severe Generator Fault at Maitri Station',
@@ -301,7 +340,110 @@ const mockAlerts = [
     isRead: false,
     createdAt: new Date(),
   },
+  {
+    _id: '67cda9000000000000000004',
+    title: 'WEATHER ALERT: Blizzard Cat 3 approaching Larsemann Hills',
+    message: 'Extreme wind (74 kt gusts) causing whiteout conditions. LARSEM-2026 expedition sheltered in place.',
+    type: 'Weather',
+    severity: 'Critical',
+    module: 'Expeditions',
+    isRead: false,
+    createdAt: new Date(),
+  },
 ];
+
+const initMockDataFromCSV = async () => {
+  return new Promise((resolve, reject) => {
+    const csvPath = path.resolve(__dirname, '../../../../polaris_cargo_delay.csv');
+    if (!fs.existsSync(csvPath)) {
+      console.log('[Sync] CSV not found, using static mock data.');
+      return resolve();
+    }
+    
+    // Clear out some existing mock arrays
+    mockExpeditions.length = 0;
+    mockCargo.length = 0;
+    mockAlerts.length = 0;
+    mockIncidents.length = 0;
+    
+    let lineCount = 0;
+    const rl = readline.createInterface({
+      input: fs.createReadStream(csvPath),
+      crlfDelay: Infinity
+    });
+    
+    rl.on('line', (line) => {
+      lineCount++;
+      if (lineCount === 1) return; // skip header
+      if (lineCount > 500) return; // Only parse top 500 to keep it manageable in memory for mocks
+      
+      const parts = line.split(',');
+      if (parts.length < 15) return;
+      
+      // date,shipping_mode,order_region,market,category,quantity,sales,scheduled_days,max_temp_c,min_temp_c,precip_mm,ice_extent,weather_severity,ice_severity,delayed
+      const [date, shippingMode, orderRegion, market, category, quantity, sales, scheduledDays, maxTemp, minTemp, precip, iceExtent, weatherSev, iceSev, delayed] = parts;
+      
+      const isDelayed = delayed === '1';
+      const riskLevel = weatherSev === 'High' || iceSev === 'High' ? 'Critical' : weatherSev === 'Medium' ? 'Moderate' : 'Low';
+      const readiness = isDelayed ? Math.floor(Math.random() * 40 + 20) : Math.floor(Math.random() * 20 + 80);
+      
+      // Expeditions
+      if (lineCount % 15 === 0) {
+        mockExpeditions.push({
+          _id: '67cda200000' + lineCount.toString().padStart(13, '0'),
+          code: `${orderRegion.substring(0,3).toUpperCase()}-${lineCount}`,
+          name: `${market} ${category} Survey`,
+          baseName: lineCount % 2 === 0 ? 'Maitri Station' : 'Bharati Station',
+          status: isDelayed ? 'Active' : 'Completed',
+          startDate: new Date(date),
+          endDate: new Date(new Date(date).getTime() + parseInt(scheduledDays) * 86400000),
+          readinessScore: readiness,
+          riskLevel: riskLevel,
+          objectives: [`Survey ${category} impact in ${orderRegion}`],
+          milestones: [{ title: 'Deployment', dueDate: date, status: 'Completed' }],
+          budget: { allocated: parseInt(sales) * 10, spent: parseInt(sales) * 5 },
+          personnel: [{},{},{},{}], // Add some dummy personnel
+          progress: isDelayed ? Math.floor(Math.random() * 40) : 100
+        });
+      }
+      
+      // Cargo
+      if (lineCount % 10 === 0) {
+        mockCargo.push({
+          _id: '67cda300000' + lineCount.toString().padStart(13, '0'),
+          trackingNumber: `CRG-2026-${lineCount}`,
+          title: `${category} Resupply - ${orderRegion}`,
+          category: category,
+          priority: riskLevel === 'Critical' ? 'Urgent' : 'High',
+          status: isDelayed ? 'Delayed' : 'InTransit',
+          weightKg: parseInt(quantity) * 100,
+          items: [{ name: category + ' Crate', quantity: parseInt(quantity), unit: 'Crates' }],
+          shippingMode: shippingMode
+        });
+      }
+      
+      // Alerts
+      if (isDelayed && riskLevel === 'Critical') {
+        mockAlerts.push({
+          _id: '67cda900000' + lineCount.toString().padStart(13, '0'),
+          title: `${weatherSev} Weather Alert in ${orderRegion}`,
+          message: `Severe conditions reported: Max Temp ${maxTemp}°C, ${precip}mm precip. ${category} cargo delayed.`,
+          type: 'Weather',
+          severity: 'Critical',
+          module: 'Expeditions',
+          isRead: false,
+          createdAt: new Date(date),
+        });
+      }
+      
+    });
+    
+    rl.on('close', () => {
+      console.log(`[Sync] Demo data synchronized from CSV. Loaded ${mockExpeditions.length} expeditions, ${mockCargo.length} cargo items, ${mockAlerts.length} alerts.`);
+      resolve();
+    });
+  });
+};
 
 module.exports = {
   mockBases,
@@ -314,4 +456,5 @@ module.exports = {
   mockTasks,
   mockIncidents,
   mockAlerts,
+  initMockDataFromCSV
 };

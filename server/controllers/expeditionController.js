@@ -38,6 +38,25 @@ const getExpedition = async (req, res, next) => {
 const createExpedition = async (req, res, next) => {
   try {
     const code = await generateExpeditionCode(Expedition);
+    
+    if (require('mongoose').connection.readyState !== 1) {
+      const newExp = {
+        ...req.body,
+        _id: '67cda200000' + Math.floor(Math.random() * 10000).toString().padStart(13, '0'),
+        code,
+        expeditionCode: code,
+        status: req.body.status || 'Planning',
+        readinessScore: Math.floor(Math.random() * 30 + 70),
+        progress: 0,
+        aiRiskPrediction: 'New mission established. Awaiting full sensor telemetry.',
+        milestones: [],
+        createdAt: new Date().toISOString()
+      };
+      mockExpeditions.push(newExp);
+      emitToAll('dashboard:statsUpdated', { module: 'expeditions' });
+      return res.status(201).json({ success: true, data: newExp });
+    }
+
     const expedition = await Expedition.create({ ...req.body, expeditionCode: code });
     expedition.readinessScore = calculateReadinessScore(expedition);
     await expedition.save();
@@ -53,6 +72,14 @@ const createExpedition = async (req, res, next) => {
 
 const updateExpedition = async (req, res, next) => {
   try {
+    if (require('mongoose').connection.readyState !== 1) {
+      const idx = mockExpeditions.findIndex(e => e._id === req.params.id);
+      if (idx === -1) return res.status(404).json({ success: false, message: 'Expedition not found.' });
+      mockExpeditions[idx] = { ...mockExpeditions[idx], ...req.body };
+      emitToAll('dashboard:statsUpdated', { module: 'expeditions' });
+      return res.json({ success: true, data: mockExpeditions[idx] });
+    }
+
     const expedition = await Expedition.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!expedition) return res.status(404).json({ success: false, message: 'Expedition not found.' });
     expedition.readinessScore = calculateReadinessScore(expedition);
@@ -69,6 +96,14 @@ const updateExpedition = async (req, res, next) => {
 
 const deleteExpedition = async (req, res, next) => {
   try {
+    if (require('mongoose').connection.readyState !== 1) {
+      const idx = mockExpeditions.findIndex(e => e._id === req.params.id);
+      if (idx === -1) return res.status(404).json({ success: false, message: 'Expedition not found.' });
+      mockExpeditions.splice(idx, 1);
+      emitToAll('dashboard:statsUpdated', { module: 'expeditions' });
+      return res.json({ success: true, message: 'Expedition deleted.' });
+    }
+
     const expedition = await Expedition.findByIdAndDelete(req.params.id);
     if (!expedition) return res.status(404).json({ success: false, message: 'Expedition not found.' });
     await ActivityLog.create({

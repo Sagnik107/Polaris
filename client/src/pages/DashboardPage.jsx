@@ -20,18 +20,21 @@ export const DashboardPage = () => {
     expeditions: [],
     bases: [],
     cargos: [],
+    cargos: [],
     incidents: [],
+    alerts: [],
     readinessScore: 87,
   });
 
   const fetchDashboard = async () => {
     try {
-      const [dashRes, expRes, basesRes, cargoRes, incRes] = await Promise.all([
+      const [dashRes, expRes, basesRes, cargoRes, incRes, alertRes] = await Promise.all([
         api.get('/dashboard'),
         api.get('/expeditions?limit=4'),
         api.get('/bases'),
         api.get('/cargo?limit=4'),
         api.get('/incidents?limit=4'),
+        api.get('/alerts?limit=4'),
       ]);
 
       setData({
@@ -45,6 +48,7 @@ export const DashboardPage = () => {
         bases: basesRes.data?.data || [],
         cargos: cargoRes.data?.data || [],
         incidents: incRes.data?.data || [],
+        alerts: alertRes.data?.data || [],
         readinessScore: dashRes.data?.data?.readinessScore || 87,
       });
     } catch (err) {
@@ -150,11 +154,22 @@ export const DashboardPage = () => {
             </span>
           </div>
           <div className="flex items-center justify-between pt-2 border-t border-border-default/60 text-xs text-text-secondary font-mono">
-            <span>Maitri: <strong className="text-ice-300">14</strong></span>
-            <span className="text-border-default">|</span>
-            <span>Bharati: <strong className="text-ice-300">10</strong></span>
-            <span className="text-border-default">|</span>
-            <span className="text-aurora-400">Himadri: 0</span>
+            {data.personnelByBase && data.personnelByBase.length > 0 ? (
+              data.personnelByBase.map((b, i) => (
+                <React.Fragment key={b._id || i}>
+                  <span>{b._id?.replace(' Station', '') || 'Base'}: <strong className="text-ice-300">{b.count}</strong></span>
+                  {i < data.personnelByBase.length - 1 && <span className="text-border-default">|</span>}
+                </React.Fragment>
+              ))
+            ) : (
+              <>
+                <span>Maitri: <strong className="text-ice-300">{data.bases?.find(b => b.code === 'MAITRI')?.currentPersonnel || 38}</strong></span>
+                <span className="text-border-default">|</span>
+                <span>Bharati: <strong className="text-ice-300">{data.bases?.find(b => b.code === 'BHARATI')?.currentPersonnel || 44}</strong></span>
+                <span className="text-border-default">|</span>
+                <span className="text-aurora-400">Himadri: {data.bases?.find(b => b.code === 'HIMADRI')?.currentPersonnel || 14}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -296,7 +311,7 @@ export const DashboardPage = () => {
 
                 {/* Gauge Inner Data */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-bold text-text-primary font-mono tracking-tight">87%</span>
+                  <span className="text-3xl font-bold text-text-primary font-mono tracking-tight">{data.readinessScore}%</span>
                   <span className="text-[11px] font-mono text-ice-300 uppercase tracking-widest font-semibold">READINESS</span>
                   <span className="text-[9px] text-text-muted font-mono">INDEX Q1-26</span>
                 </div>
@@ -310,10 +325,10 @@ export const DashboardPage = () => {
                     <span className="flex items-center gap-2 text-text-secondary font-medium">
                       <span className="w-2.5 h-2.5 rounded-full bg-ice-400" /> Ready
                     </span>
-                    <span className="font-mono font-bold text-ice-300">87%</span>
+                    <span className="font-mono font-bold text-ice-300">{data.readinessScore}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-polar-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-ice-500 to-aurora-400 rounded-full" style={{ width: '87%' }} />
+                    <div className="h-full bg-gradient-to-r from-ice-500 to-aurora-400 rounded-full" style={{ width: `${data.readinessScore}%` }} />
                   </div>
                 </div>
 
@@ -385,123 +400,60 @@ export const DashboardPage = () => {
 
             {/* Expedition Cards */}
             <div className="divide-y divide-border-default/60">
-              {/* Expedition Item 1: INAE-2026 */}
-              <div
-                onClick={() => navigate('/expeditions/EXP-2026-001')}
-                className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-surface-container/30 px-2 rounded-lg transition-colors cursor-pointer"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center text-ice-400 mt-0.5">
-                    <span className="material-symbols-outlined">terrain</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-headline text-base font-bold text-text-primary tracking-wide">INAE-2026</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-aurora-500/10 text-aurora-400 border border-aurora-500/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-aurora-400" /> [ON TRACK]
-                      </span>
+              {(data.activeExpeditionsList || data.expeditions || []).map((exp) => (
+                <div
+                  key={exp._id}
+                  onClick={() => navigate(`/expeditions/${exp._id}`)}
+                  className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-surface-container/30 px-2 rounded-lg transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg bg-surface-2 border flex items-center justify-center mt-0.5 ${
+                      exp.riskLevel === 'High' || exp.riskLevel === 'Critical' ? 'border-warning/40 text-warning' : 'border-border-default text-ice-400'
+                    }`}>
+                      <span className="material-symbols-outlined">{exp.riskLevel === 'High' ? 'warning' : 'terrain'}</span>
                     </div>
-                    <p className="text-xs text-text-secondary mt-0.5">East Antarctica Core Sampling Sector Bravo</p>
-                    <div className="flex items-center gap-4 text-xs font-mono text-text-muted mt-1">
-                      <span>Lead: Dr. V. Sen</span>
-                      <span>•</span>
-                      <span>Personnel: 8</span>
-                      <span>•</span>
-                      <span>Sensors: 42 Active</span>
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-headline text-base font-bold text-text-primary tracking-wide">{exp.code}</span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border ${
+                          exp.riskLevel === 'High' || exp.riskLevel === 'Critical' ? 'bg-warning/15 text-warning border-warning/40' : 'bg-aurora-500/10 text-aurora-400 border-aurora-500/30'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${exp.riskLevel === 'High' ? 'bg-warning animate-pulse' : 'bg-aurora-400'}`} /> 
+                          [{exp.riskLevel === 'High' ? 'AT RISK' : 'ON TRACK'}]
+                        </span>
+                        {exp.riskLevel === 'High' && (
+                           <span className="text-[11px] text-danger font-mono font-medium">Delay Predicted</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-text-secondary mt-0.5">{exp.name}</p>
+                      <div className="flex items-center gap-4 text-xs font-mono text-text-muted mt-1">
+                        <span>Base: {exp.baseName || (exp.destinationBase?.name)}</span>
+                        <span>•</span>
+                        <span className={exp.riskLevel === 'High' ? "text-warning" : "text-aurora-400"}>
+                          {exp.aiRiskPrediction || 'Clear Corridor'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="sm:w-48 flex flex-col items-end gap-1.5">
-                  <div className="w-full flex justify-between text-xs font-mono">
-                    <span className="text-text-muted">Progress</span>
-                    <span className="text-ice-300 font-semibold">75%</span>
-                  </div>
-                  <div className="w-full h-2 bg-polar-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-ice-400 rounded-full" style={{ width: '75%' }} />
-                  </div>
-                  <span className="text-[10px] text-text-muted font-mono">ETA Destination: 4d 18h</span>
-                </div>
-              </div>
-
-              {/* Expedition Item 2: LARSEM-2026 */}
-              <div
-                onClick={() => navigate('/expeditions/EXP-2026-002')}
-                className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-surface-container/30 px-2 rounded-lg transition-colors cursor-pointer"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-surface-2 border border-warning/40 flex items-center justify-center text-warning mt-0.5">
-                    <span className="material-symbols-outlined text-warning">ac_unit</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-headline text-base font-bold text-text-primary tracking-wide">LARSEM-2026</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-warning/15 text-warning border border-warning/40">
-                        <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" /> [AT RISK]
-                      </span>
-                      <span className="text-[11px] text-danger font-mono font-medium">Blizzard delay</span>
+                  <div className="sm:w-48 flex flex-col items-end gap-1.5">
+                    <div className="w-full flex justify-between text-xs font-mono">
+                      <span className="text-text-muted">Progress</span>
+                      <span className={`${exp.riskLevel === 'High' ? 'text-warning' : 'text-ice-300'} font-semibold`}>{exp.progress || exp.readinessScore || 0}%</span>
                     </div>
-                    <p className="text-xs text-text-secondary mt-0.5">Larsemann Hills Structural Bedrock Survey</p>
-                    <div className="flex items-center gap-4 text-xs font-mono text-text-muted mt-1">
-                      <span>Lead: K. Johansen</span>
-                      <span>•</span>
-                      <span>Personnel: 6</span>
-                      <span>•</span>
-                      <span className="text-danger">Wind: 74 kt gusts</span>
+                    <div className="w-full h-2 bg-polar-900 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${exp.riskLevel === 'High' ? 'bg-warning' : 'bg-ice-400'}`} style={{ width: `${exp.progress || exp.readinessScore || 0}%` }} />
                     </div>
+                    <span className="text-[10px] text-text-muted font-mono">{exp.milestones?.[0]?.title || 'Deploying'}</span>
                   </div>
                 </div>
-
-                <div className="sm:w-48 flex flex-col items-end gap-1.5">
-                  <div className="w-full flex justify-between text-xs font-mono">
-                    <span className="text-text-muted">Progress</span>
-                    <span className="text-warning font-semibold">41%</span>
-                  </div>
-                  <div className="w-full h-2 bg-polar-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-warning rounded-full" style={{ width: '41%' }} />
-                  </div>
-                  <span className="text-[10px] text-warning font-mono">Sheltered at Refuge Pod 3</span>
+              ))}
+              
+              {!(data.activeExpeditionsList || data.expeditions)?.length && (
+                <div className="py-8 text-center text-text-muted font-mono text-sm">
+                  No active expeditions monitored.
                 </div>
-              </div>
-
-              {/* Expedition Item 3: Bharati Resupply */}
-              <div
-                onClick={() => navigate('/cargo')}
-                className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-surface-container/30 px-2 rounded-lg transition-colors cursor-pointer"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-surface-2 border border-border-default flex items-center justify-center text-aurora-400 mt-0.5">
-                    <span className="material-symbols-outlined">deployed_code</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-headline text-base font-bold text-text-primary tracking-wide">Bharati Resupply</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-aurora-500/10 text-aurora-400 border border-aurora-500/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-aurora-400" /> [ON TRACK]
-                      </span>
-                    </div>
-                    <p className="text-xs text-text-secondary mt-0.5">Antarctic Station Critical Fuel & Cryo-Logistics</p>
-                    <div className="flex items-center gap-4 text-xs font-mono text-text-muted mt-1">
-                      <span>Convoy: Piston-Bully #4</span>
-                      <span>•</span>
-                      <span>Payload: 18.4 T</span>
-                      <span>•</span>
-                      <span className="text-aurora-400">Clear Corridor</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="sm:w-48 flex flex-col items-end gap-1.5">
-                  <div className="w-full flex justify-between text-xs font-mono">
-                    <span className="text-text-muted">Progress</span>
-                    <span className="text-aurora-400 font-semibold">92%</span>
-                  </div>
-                  <div className="w-full h-2 bg-polar-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-aurora-400 rounded-full" style={{ width: '92%' }} />
-                  </div>
-                  <span className="text-[10px] text-text-muted font-mono">Docking in 02h 15m</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -645,7 +597,7 @@ export const DashboardPage = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-success" />
                 </div>
                 <div className="font-mono text-[10px] text-text-muted">
-                  Crew: 14 • -18°C • 1012 hPa
+                  Crew: {data.bases?.find(b => b.code === 'MAITRI')?.currentPersonnel || 14} • -18°C • 1012 hPa
                 </div>
               </div>
             </div>
@@ -665,7 +617,7 @@ export const DashboardPage = () => {
                   <span className="text-[9px] px-1 rounded bg-aurora-400/20 text-aurora-300 font-mono">HUB</span>
                 </div>
                 <div className="font-mono text-[10px] text-text-muted">
-                  Crew: 10 • -22°C • Resupply 92%
+                  Crew: {data.bases?.find(b => b.code === 'BHARATI')?.currentPersonnel || 10} • -22°C • Resupply 92%
                 </div>
               </div>
             </div>
@@ -738,77 +690,30 @@ export const DashboardPage = () => {
 
             {/* Feed Items List */}
             <div className="flex flex-col gap-3">
-              {/* Event 1 */}
-              <div className="p-3 rounded-lg bg-surface-2/80 border border-border-default hover:border-border-strong transition-all group">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-aurora-400">
-                    <span className="material-symbols-outlined text-sm">check_circle</span>
-                    CARGO ARRIVAL
-                  </span>
-                  <span className="font-mono text-[11px] text-text-muted">14:26:18 UTC</span>
+              {(data.alerts || []).map((alert, idx) => (
+                <div key={alert._id || idx} className={`p-3 rounded-lg border transition-all group ${alert.severity === 'Critical' ? 'bg-warning/5 border-warning/30 hover:border-warning/60' : 'bg-surface-2/80 border-border-default hover:border-border-strong'}`}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-semibold ${alert.severity === 'Critical' ? 'text-warning' : (alert.type === 'Weather' ? 'text-ice-400' : 'text-aurora-400')}`}>
+                      <span className="material-symbols-outlined text-sm">{alert.severity === 'Critical' ? 'warning' : 'info'}</span>
+                      {alert.type || 'SYSTEM'}
+                    </span>
+                    <span className="font-mono text-[11px] text-text-muted">{new Date(alert.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC</span>
+                  </div>
+                  <p className="text-xs text-text-primary font-body">
+                    {alert.message}
+                  </p>
+                  <div className={`mt-2 pt-2 flex justify-between text-[11px] font-mono border-t ${alert.severity === 'Critical' ? 'border-warning/20' : 'border-border-default/50 text-text-muted'}`}>
+                    <span className={alert.severity === 'Critical' ? 'text-warning' : ''}>{alert.title}</span>
+                    <button onClick={() => navigate('/alerts')} className="text-ice-300 hover:underline cursor-pointer">View</button>
+                  </div>
                 </div>
-                <p className="text-xs text-text-primary font-body">
-                  Cargo container <strong className="font-mono text-ice-300">ATX-103</strong> cleared ice shelf staging at Maitri depot.
-                </p>
-                <div className="mt-2 pt-2 border-t border-border-default/50 flex justify-between text-[11px] font-mono text-text-muted">
-                  <span>Manifest: Cold-Lab Spares</span>
-                  <span className="text-success font-medium">Verified 100%</span>
+              ))}
+              
+              {!(data.alerts?.length) && (
+                <div className="py-6 text-center text-text-muted text-xs font-mono">
+                  No active alerts in telemetry stream.
                 </div>
-              </div>
-
-              {/* Event 2 */}
-              <div className="p-3 rounded-lg bg-warning/5 border border-warning/30 hover:border-warning/60 transition-all group">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-warning">
-                    <span className="material-symbols-outlined text-sm">warning</span>
-                    DEPOT TELEMETRY
-                  </span>
-                  <span className="font-mono text-[11px] text-text-muted">14:19:04 UTC</span>
-                </div>
-                <p className="text-xs text-text-primary font-body">
-                  Auxiliary generator tank 3 fuel level below 15% threshold at <strong className="text-ice-300">Maitri Base</strong>.
-                </p>
-                <div className="mt-2 pt-2 border-t border-warning/20 flex justify-between text-[11px] font-mono">
-                  <span className="text-warning">Auto-pump rerouted to Tank 1</span>
-                  <button onClick={() => navigate('/inventory')} className="text-ice-300 hover:underline cursor-pointer">Dispatch Tanker</button>
-                </div>
-              </div>
-
-              {/* Event 3 */}
-              <div className="p-3 rounded-lg bg-surface-2/80 border border-border-default hover:border-border-strong transition-all group">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-ice-400">
-                    <span className="material-symbols-outlined text-sm">medical_services</span>
-                    ASSET ALLOCATION
-                  </span>
-                  <span className="font-mono text-[11px] text-text-muted">14:02:45 UTC</span>
-                </div>
-                <p className="text-xs text-text-primary font-body">
-                  Trauma Medical Kit <strong className="font-mono text-ice-300">MED-ARC-9</strong> transfer authorized for INAE-2026 traverse team.
-                </p>
-                <div className="mt-2 pt-2 border-t border-border-default/50 flex justify-between text-[11px] font-mono text-text-muted">
-                  <span>Sign-off: Dr. Rostova</span>
-                  <span className="text-ice-300">Pod 02 Loaded</span>
-                </div>
-              </div>
-
-              {/* Event 4 */}
-              <div className="p-3 rounded-lg bg-surface-2/80 border border-border-default hover:border-border-strong transition-all group">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-sky-500">
-                    <span className="material-symbols-outlined text-sm">satellite_alt</span>
-                    SATCOM UPLINK
-                  </span>
-                  <span className="font-mono text-[11px] text-text-muted">13:54:12 UTC</span>
-                </div>
-                <p className="text-xs text-text-primary font-body">
-                  Iridium-Constellation array <strong className="font-mono text-ice-300">POLAR-SAT-4</strong> sync complete. 128 kbps telemetry locked.
-                </p>
-                <div className="mt-2 pt-2 border-t border-border-default/50 flex justify-between text-[11px] font-mono text-text-muted">
-                  <span>Latency: 382ms</span>
-                  <span className="text-success font-medium">Jitter: 4ms (Stable)</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 

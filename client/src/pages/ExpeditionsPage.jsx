@@ -2,6 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
+// Curated distinct polar expedition photography pool (including user images)
+const EXPEDITION_PHOTOS = [
+  {
+    url: '/images/expedition_traverse.png',
+    tag: 'LIVE CONVOY TRAVERSE FEED',
+    title: 'Polar Expedition Traverse & Over-Ice Vehicles',
+  },
+  {
+    url: '/images/polar_base.png',
+    tag: 'STATION COMMAND FEED',
+    title: 'Antarctic Base Outpost & Operations Center',
+  },
+  {
+    url: '/images/polar_overview.png',
+    tag: 'HIGH-LATITUDE SATELLITE RECON',
+    title: 'Polar Ice Field & Traverse Reconnaissance',
+  },
+  {
+    url: 'https://lh3.googleusercontent.com/aida/AEtjO1XAS-cGiVStzv8bh8ztpU3ZcvwOM7DzMClTvIbLwMP1JoiSTeW_9ZEroxF3JXZUeznK9e3REfzfkdys3EujEsKKrzP-6Ukoy7YoNfyrz4qEHhkk0Z2RC3db9zsA4nWQ_mnpddZ4AlC9WKF5l6DDLi6aWsD-cprpoGIEio0U2h6w9HGTcvNaO4ni5M37KSVQho3ZEPTB557t7VGshh--bsfiSBQ1S1RQkHSHn77lVCFccp58YbLM7lU88WM',
+    tag: 'MARITIME ICEBREAKER BRIDGE',
+    title: 'Polar Research Vessel Navigating Pack Ice',
+  },
+  {
+    url: '/images/inventory_depot.png',
+    tag: 'DEPOT LOGISTICS RECON',
+    title: 'Polar Supply Depot & Cargo Staging Area',
+  },
+  {
+    url: 'https://lh3.googleusercontent.com/aida/AEtjO1VL6Ze4liEEnPKoI0ByA9VlQwf4slB9Oe4hy18P6owN5ehFPm7W_DMTCgAMskZkN_H0S3ol-aqiExej0n3pkVhdo7oZgVF3pvVu7ZPUrBvgp9BrjvLyc32A9PAP-PIb_nGqL0siSFgJAizf6M5dFSGCUVia4zWrMPaiTvg5WwVcdiOAYmIRXHxK1BNmjhUXkS1n8_pZ-Yp2JMDKEGidr76TdCTy71tA59c8VUoEG3jgRKb_vTpWaI1Nh33t',
+    tag: 'OPTICAL AURORA FLUX ARRAY',
+    title: 'Glacial Twilight & Geomagnetic Aurora Survey',
+  },
+];
+
 export const ExpeditionsPage = () => {
   const navigate = useNavigate();
   const [expeditions, setExpeditions] = useState([]);
@@ -10,6 +44,8 @@ export const ExpeditionsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editExp, setEditExp] = useState(null);
   const [newExp, setNewExp] = useState({
     name: '',
     code: '',
@@ -19,6 +55,7 @@ export const ExpeditionsPage = () => {
     startDate: '2026-11-01',
     endDate: '2027-02-28',
     leader: 'Dr. V. Sen',
+    image: '',
   });
 
   const fetchExpeditions = async () => {
@@ -44,6 +81,32 @@ export const ExpeditionsPage = () => {
       fetchExpeditions();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to create expedition');
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/expeditions/${editExp._id}`, editExp);
+      setShowEditModal(false);
+      fetchExpeditions();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update expedition');
+    }
+  };
+
+  const openEditModal = (exp) => {
+    setEditExp(exp);
+    setShowEditModal(true);
+  };
+
+  const handleArchive = async (id) => {
+    if (!window.confirm('Are you sure you want to archive this expedition?')) return;
+    try {
+      await api.delete(`/expeditions/${id}`);
+      fetchExpeditions();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to archive expedition');
     }
   };
 
@@ -247,26 +310,31 @@ export const ExpeditionsPage = () => {
                 className="p-5 rounded-xl bg-surface-1 backdrop-blur-md border border-border-strong hover:border-ice-400/70 transition-all duration-200 group relative flex flex-col justify-between shadow-[0_4px_24px_rgba(2,9,20,0.6)]"
               >
                 {/* Photo Banner */}
-                <div className="relative w-full h-36 rounded-lg overflow-hidden mb-4 border border-border-default/80 group-hover:border-ice-400/50 transition-all">
-                  <img
-                    src={
-                      idx === 0
-                        ? 'https://lh3.googleusercontent.com/aida-public/AB6AXuDIDHAGHW_XUSEgiKJoTqlcha3CYatOuJGWVcc6kFnVq83mAA5h9ApErVPI46H1mESPAOrS_Viom9I795j3Vk3wQez_dZW2U3MoLztH2Me2E1b1a9dHT3MtTFfMqo7mBhdBUQEZ3R2sVf0dinYNalBdxo9quXybIlWgWSbhLWP6ltSnARk3Fumd0RYtKogSzbC-BNNrziDeRKGHZZVBgtaQc9eQSSMJIn35Sop3-xC3XbgQ_8XZFo1Fjg'
-                        : 'https://lh3.googleusercontent.com/aida/AEtjO1U0DpGPrplsgWkl5hqrlXNo7m9NMwcxHhySUSHGQ1MarOUNguc-BTux_B3eBByxQKy501SDtvG2HRIiUoUaDUZNlZfCADh1NkpU6LR3Xn04EeGqBBq9ebsmtJxXm8jzzDZ3Al7tEasZ99YqdRn4S8snCfOodYpFDZTTmlAZdnFuZw0mHFAm3Iapci1Up4xterxEKEVv07_29vRJYEbQiKRUcTKz9vZ_Zo8ku213aMmX7nDCnH4hWElc3iHj'
-                    }
-                    alt="Antarctic scientific expedition traverse convoy"
-                    className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-all duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-polar-950 via-polar-950/20 to-transparent" />
-                  <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-2/90 backdrop-blur-md border border-border-default text-[10px] font-mono text-ice-200 shadow-sm">
-                    <span className="material-symbols-outlined text-xs text-aurora-400">satellite_alt</span>
-                    <span>LIVE CONVOY TRAVERSE FEED</span>
-                  </div>
-                  <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-polar-950/80 backdrop-blur-md border border-border-default text-[10px] font-mono text-text-muted flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                    <span>CAM-01 [{exp.region || 'EAST SECTOR'}]</span>
-                  </div>
-                </div>
+                {(() => {
+                  const photoItem = EXPEDITION_PHOTOS[idx % EXPEDITION_PHOTOS.length];
+                  const imgSrc = exp.image || photoItem.url;
+                  const imgTag = photoItem.tag;
+                  const imgTitle = photoItem.title;
+
+                  return (
+                    <div className="relative w-full h-36 rounded-lg overflow-hidden mb-4 border border-border-default/80 group-hover:border-ice-400/50 transition-all">
+                      <img
+                        src={imgSrc}
+                        alt={imgTitle}
+                        className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-all duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-polar-950 via-polar-950/20 to-transparent" />
+                      <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-2/90 backdrop-blur-md border border-border-default text-[10px] font-mono text-ice-200 shadow-sm">
+                        <span className="material-symbols-outlined text-xs text-aurora-400">satellite_alt</span>
+                        <span>{imgTag}</span>
+                      </div>
+                      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-polar-950/80 backdrop-blur-md border border-border-default text-[10px] font-mono text-text-muted flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                        <span>CAM-0{((idx % 6) + 1)} [{exp.region || 'POLAR SECTOR'}]</span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="space-y-4">
                   {/* Header & Status Pill */}
@@ -323,7 +391,7 @@ export const ExpeditionsPage = () => {
                       <span className="text-[10px] text-text-muted">TARGET BASE</span>
                       <span className="text-text-primary flex items-center gap-1.5 mt-0.5">
                         <span className="material-symbols-outlined text-sm text-aurora-400">home_pin</span>
-                        {exp.targetBase || 'Maitri & Bharati'}
+                        {exp.targetBase || exp.baseName || exp.destinationBase?.name || 'Maitri'}
                       </span>
                     </div>
                   </div>
@@ -354,23 +422,45 @@ export const ExpeditionsPage = () => {
                     <div className="flex-1 mr-4">
                       <div className="flex justify-between text-xs font-mono mb-1">
                         <span className="text-text-muted">Route Traversed</span>
-                        <span className="text-ice-300 font-semibold">{exp.progress || 75}%</span>
+                        <span className="text-ice-300 font-semibold">{exp.progress || exp.readinessScore || 0}%</span>
                       </div>
                       <div className="w-full h-1.5 bg-polar-900 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-ice-500 to-aurora-400 rounded-full"
-                          style={{ width: `${exp.progress || 75}%` }}
+                          style={{ width: `${exp.progress || exp.readinessScore || 0}%` }}
                         />
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => navigate(`/expeditions/${exp._id || 'EXP-2026-001'}`)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-strong text-ice-300 hover:text-text-primary text-xs font-mono transition-all cursor-pointer whitespace-nowrap"
-                    >
-                      <span>Expedition Detail</span>
-                      <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                    </button>
+                    <div className="flex gap-2 items-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditModal(exp);
+                        }}
+                        className="flex items-center justify-center p-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-strong text-text-muted hover:text-ice-300 text-xs font-mono transition-all cursor-pointer"
+                        title="Edit Expedition"
+                      >
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleArchive(exp._id);
+                        }}
+                        className="flex items-center justify-center p-1.5 rounded-lg bg-surface-2 hover:bg-danger/20 border border-border-strong text-text-muted hover:text-danger text-xs font-mono transition-all cursor-pointer"
+                        title="Archive Expedition"
+                      >
+                        <span className="material-symbols-outlined text-sm">archive</span>
+                      </button>
+                      <button
+                        onClick={() => navigate(`/expeditions/${exp._id}`)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-strong text-ice-300 hover:text-text-primary text-xs font-mono transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        <span>Detail</span>
+                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>
@@ -399,21 +489,38 @@ export const ExpeditionsPage = () => {
                   <tr key={idx} className="h-12 hover:bg-surface-2 transition-colors">
                     <td className="px-4 py-2 text-ice-300 font-semibold">{exp.code || `EXP-${idx + 1}`}</td>
                     <td className="px-4 py-2 text-text-primary font-medium">{exp.name}</td>
-                    <td className="px-4 py-2 text-text-secondary">{exp.targetBase} ({exp.region})</td>
+                    <td className="px-4 py-2 text-text-secondary">{exp.targetBase || exp.baseName || exp.destinationBase?.name} ({exp.region || 'East Antarctica'})</td>
                     <td className="px-4 py-2 text-text-muted">{exp.leader || 'Dr. V. Sen'}</td>
                     <td className="px-4 py-2 text-aurora-400">{exp.personnel?.length || 8} PAX</td>
                     <td className="px-4 py-2 text-ice-300 font-bold">{exp.readinessScore || 87}%</td>
                     <td className="px-4 py-2">
-                      <span className="px-2 py-0.5 rounded bg-surface-container text-xs text-success border border-success/30">
+                      <span className={`px-2 py-0.5 rounded bg-surface-container text-xs border ${
+                        exp.status === 'Completed' ? 'text-text-secondary border-border-default' :
+                        (exp.riskLevel === 'High' || exp.riskLevel === 'Critical' ? 'text-warning border-warning/30' : 'text-success border-success/30')
+                      }`}>
                         {exp.status || 'Active'}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-right">
+                    <td className="px-4 py-2 text-right flex gap-3 justify-end items-center h-12">
                       <button
-                        onClick={() => navigate(`/expeditions/${exp._id || 'EXP-2026-001'}`)}
+                        onClick={() => navigate(`/expeditions/${exp._id}`)}
                         className="text-ice-400 hover:underline cursor-pointer"
                       >
                         Inspect →
+                      </button>
+                      <button
+                        onClick={() => openEditModal(exp)}
+                        className="text-text-muted hover:text-ice-300 cursor-pointer flex items-center"
+                        title="Edit"
+                      >
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleArchive(exp._id)}
+                        className="text-text-muted hover:text-danger cursor-pointer flex items-center"
+                        title="Archive"
+                      >
+                        <span className="material-symbols-outlined text-sm">archive</span>
                       </button>
                     </td>
                   </tr>
@@ -502,6 +609,47 @@ export const ExpeditionsPage = () => {
                 />
               </div>
 
+              <div>
+                <label className="block text-text-muted mb-1 uppercase">Expedition Picture (File or URL)</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={newExp.image}
+                    onChange={(e) => setNewExp({ ...newExp, image: e.target.value })}
+                    placeholder="https://... or browse local image"
+                    className="flex-1 p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
+                  />
+                  <label className="px-3 py-2.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-strong text-ice-300 hover:text-white cursor-pointer transition-all whitespace-nowrap">
+                    <span>Browse</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setNewExp({ ...newExp, image: ev.target.result });
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                {newExp.image && (
+                  <div className="mt-2 relative w-full h-24 rounded-lg overflow-hidden border border-border-strong">
+                    <img src={newExp.image} alt="Expedition Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setNewExp({ ...newExp, image: '' })}
+                      className="absolute top-1 right-1 bg-polar-950/80 text-danger text-[10px] px-1.5 py-0.5 rounded border border-danger/40 cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-3 pt-3 border-t border-border-default">
                 <button
                   type="button"
@@ -515,6 +663,116 @@ export const ExpeditionsPage = () => {
                   className="px-4 py-2 rounded-lg bg-gradient-to-r from-ice-500 to-sky-500 text-polar-950 font-bold hover:brightness-110 cursor-pointer shadow-[0_0_12px_rgba(40,169,245,0.3)]"
                 >
                   Issue Mission Order
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT EXPEDITION MODAL */}
+      {showEditModal && editExp && (
+        <div className="fixed inset-0 z-50 bg-polar-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-surface-2 border border-border-strong p-6 shadow-2xl space-y-5">
+            <div className="flex justify-between items-center pb-3 border-b border-border-default">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-ice-400">edit_document</span>
+                <h3 className="font-headline text-lg font-bold text-text-primary">Edit Polar Expedition</h3>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-text-muted hover:text-text-primary cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4 text-xs font-mono">
+              <div>
+                <label className="block text-text-muted mb-1 uppercase">Mission Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editExp.name || ''}
+                  onChange={(e) => setEditExp({ ...editExp, name: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-text-muted mb-1 uppercase">Order / Code</label>
+                  <input
+                    type="text"
+                    required
+                    value={editExp.code || ''}
+                    onChange={(e) => setEditExp({ ...editExp, code: e.target.value })}
+                    className="w-full p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
+                  />
+                </div>
+                <div>
+                  <label className="block text-text-muted mb-1 uppercase">Operating Base</label>
+                  <select
+                    value={editExp.targetBase || editExp.baseName || editExp.destinationBase?.name || 'Maitri'}
+                    onChange={(e) => setEditExp({ ...editExp, targetBase: e.target.value })}
+                    className="w-full p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
+                  >
+                    <option value="Maitri">Maitri Base (70°45'S)</option>
+                    <option value="Bharati">Bharati Station (69°24'S)</option>
+                    <option value="Himadri">Himadri Base (78°55'N)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-text-muted mb-1 uppercase">Mission Leader</label>
+                <input
+                  type="text"
+                  required
+                  value={editExp.leader || ''}
+                  onChange={(e) => setEditExp({ ...editExp, leader: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
+                />
+              </div>
+
+              <div>
+                <label className="block text-text-muted mb-1 uppercase">Status</label>
+                <select
+                  value={editExp.status || 'Active'}
+                  onChange={(e) => setEditExp({ ...editExp, status: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
+                >
+                  <option value="Planning">Planning</option>
+                  <option value="Active">Active</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Archived">Archived</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-text-muted mb-1 uppercase">Scientific Scope & Description</label>
+                <textarea
+                  rows={3}
+                  value={editExp.description || ''}
+                  onChange={(e) => setEditExp({ ...editExp, description: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-border-default">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 rounded-lg bg-surface-1 border border-border-default text-text-secondary hover:text-text-primary cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-ice-500 to-sky-500 text-polar-950 font-bold hover:brightness-110 cursor-pointer shadow-[0_0_12px_rgba(40,169,245,0.3)]"
+                >
+                  Save Changes
                 </button>
               </div>
             </form>
