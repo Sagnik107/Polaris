@@ -32,7 +32,7 @@ const PERMISSIONS = {
   BaseOfficer: [
     'bases:update', 'personnel:update', 'inventory:read', 'inventory:update',
     'cargo:read', 'expeditions:read', 'incidents:create', 'incidents:update',
-    'tasks:update', 'alerts:read', 'analytics:base', 'reports:base',
+    'tasks:create', 'tasks:update', 'alerts:read', 'analytics:base', 'reports:base',
   ],
   MedicalOfficer: [
     'incidents:crud', 'personnel:read', 'inventory:read',

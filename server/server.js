@@ -102,7 +102,11 @@ const startServer = async () => {
   });
 };
 
-startServer();
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+} else {
+  initSocketService(io);
+}
 
 // POLARIS Polar Command Engine v4.0
 module.exports = { app, server };

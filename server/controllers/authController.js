@@ -39,6 +39,14 @@ const login = async (req, res, next) => {
     if (mongoose.connection.readyState !== 1) {
       const mockUser = mockUsers.find((u) => u.email === email);
       if (mockUser && password === 'Polaris@2026') {
+        const userStatus = mockUser.status || (mockUser.isActive ? 'Active' : 'Inactive');
+        if (userStatus === 'Suspended') {
+          return res.status(403).json({ success: false, message: 'Account is suspended. Contact polar command authority.' });
+        }
+        if (userStatus === 'Inactive' || mockUser.isActive === false) {
+          return res.status(403).json({ success: false, message: 'Account is inactive. Contact administrator.' });
+        }
+        mockUser.lastLogin = new Date();
         const accessToken = generateAccessToken(mockUser);
         const refreshToken = generateRefreshToken(mockUser);
         return res.json({
@@ -53,8 +61,12 @@ const login = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
-    if (!user.isActive) {
-      return res.status(401).json({ success: false, message: 'Account deactivated. Contact administrator.' });
+    const userStatus = user.status || (user.isActive ? 'Active' : 'Inactive');
+    if (userStatus === 'Suspended') {
+      return res.status(403).json({ success: false, message: 'Account is suspended. Contact polar command authority.' });
+    }
+    if (userStatus === 'Inactive' || !user.isActive) {
+      return res.status(403).json({ success: false, message: 'Account is inactive. Contact administrator.' });
     }
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {

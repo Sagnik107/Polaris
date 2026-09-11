@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema(
       default: 'Viewer',
     },
     baseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Base', default: null },
+    designation: { type: String, default: 'Polar Operations Specialist', trim: true },
+    status: {
+      type: String,
+      enum: ['Active', 'Inactive', 'Suspended'],
+      default: 'Active',
+    },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date, default: null },
     refreshToken: { type: String, default: null, select: false },
@@ -34,8 +40,14 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ status: 1 });
 
 userSchema.pre('save', async function (next) {
+  if (this.isModified('status')) {
+    this.isActive = this.status === 'Active';
+  } else if (this.isModified('isActive')) {
+    this.status = this.isActive ? 'Active' : 'Inactive';
+  }
   if (!this.isModified('passwordHash')) return next();
   const salt = await bcrypt.genSalt(12);
   this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
