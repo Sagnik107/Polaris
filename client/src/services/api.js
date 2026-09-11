@@ -20,25 +20,41 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: handle 401s and token refresh
+// Response interceptor: handle 401s and token refresh safely without infinite loops
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const url = originalRequest?.url || '';
+    const isAuthEndpoint = url.includes('/auth/');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
-      try {
-        const refreshResponse = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
-        if (refreshResponse.data?.data?.accessToken) {
-          const newToken = refreshResponse.data.data.accessToken;
-          localStorage.setItem('polaris_token', newToken);
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
+      const token = localStorage.getItem('polaris_token');
+
+      if (token) {
+        try {
+          const refreshResponse = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+          if (refreshResponse.data?.data?.accessToken) {
+            const newToken = refreshResponse.data.data.accessToken;
+            localStorage.setItem('polaris_token', newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return api(originalRequest);
+          }
+        } catch (refreshErr) {
+          // Refresh failed - purge invalid credentials
+          localStorage.removeItem('polaris_token');
+          localStorage.removeItem('polaris_user');
+          if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+            window.location.href = '/login';
+          }
         }
-      } catch (refreshErr) {
+      } else {
         localStorage.removeItem('polaris_token');
         localStorage.removeItem('polaris_user');
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

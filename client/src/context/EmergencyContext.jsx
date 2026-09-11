@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { getSocket } from '../services/socket';
+import { useAuth } from './AuthContext';
 
 const EmergencyContext = createContext(null);
 
 export const EmergencyProvider = ({ children }) => {
+  const { user } = useAuth();
   const [isSosModalOpen, setIsSosModalOpen] = useState(false);
   const [sosInitialData, setSosInitialData] = useState(null);
   const [stats, setStats] = useState({
@@ -20,6 +22,7 @@ export const EmergencyProvider = ({ children }) => {
 
   // Fetch telemetry
   const fetchEmergencyTelemetry = useCallback(async () => {
+    if (!user) return;
     try {
       const [statsRes, incRes] = await Promise.allSettled([
         api.get('/incidents/stats'),
@@ -36,9 +39,11 @@ export const EmergencyProvider = ({ children }) => {
     } catch (err) {
       console.warn('Emergency telemetry sync error:', err);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
+    if (!user) return;
+
     fetchEmergencyTelemetry();
 
     // Listen to real-time emergency events from backend sockets
@@ -58,7 +63,7 @@ export const EmergencyProvider = ({ children }) => {
 
     const interval = setInterval(fetchEmergencyTelemetry, 25000);
     return () => clearInterval(interval);
-  }, [fetchEmergencyTelemetry]);
+  }, [user, fetchEmergencyTelemetry]);
 
   // Open SOS modal with optional initial context (e.g. from Base, Cargo, or Header)
   const openSosModal = (initialData = null) => {

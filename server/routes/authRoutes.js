@@ -38,6 +38,6 @@ router.put('/change-password', requireAuth,
   validate, changePassword
 );
 router.post('/refresh', refreshTokenHandler);
-router.post('/logout', requireAuth, logout);
+router.post('/logout', logout);
 
 module.exports = router;
