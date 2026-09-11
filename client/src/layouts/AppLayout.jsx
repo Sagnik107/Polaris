@@ -15,6 +15,17 @@ export const AppLayout = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.warn('Logout error:', err);
+    } finally {
+      navigate('/login');
+    }
+  };
 
   // Live UTC Clock
   useEffect(() => {
@@ -159,7 +170,7 @@ export const AppLayout = () => {
         </div>
 
         {/* Sidebar Bottom: CTA & System Utilities (Stitch design) */}
-        <div className="flex flex-col gap-3 pt-3 border-t border-[rgba(130,190,225,0.18)]">
+        <div className="flex flex-col gap-2.5 pt-3 border-t border-[rgba(130,190,225,0.18)]">
           {/* Emergency Dispatch Action Button */}
           <button
             onClick={() => navigate('/emergency')}
@@ -169,11 +180,21 @@ export const AppLayout = () => {
             <span>Emergency Dispatch</span>
           </button>
 
+          {/* Dedicated Log Out Button in Sidebar */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-[#FF6678]/10 border border-[#FF6678]/30 text-[#FF6678] hover:bg-[#FF6678] hover:text-[#020914] font-mono text-xs transition-all duration-150 active:scale-95 cursor-pointer"
+            title="Terminate session and sign out"
+          >
+            <span className="material-symbols-outlined text-sm">logout</span>
+            <span>Log Out System</span>
+          </button>
+
           {/* Sub-utilities (Help, Online Sync) */}
-          <div className="flex items-center justify-between text-[#6E8498] px-1 text-[11px] font-mono">
+          <div className="flex items-center justify-between text-[#6E8498] px-1 text-[11px] font-mono pt-0.5">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="flex items-center gap-1.5 hover:text-[#7BD0FF] transition-colors"
+              className="flex items-center gap-1.5 hover:text-[#7BD0FF] transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm">help</span>
               <span>Help</span>
@@ -280,23 +301,110 @@ export const AppLayout = () => {
               <span className="material-symbols-outlined text-[#6E8498] text-sm">unfold_more</span>
             </div>
 
-            {/* Operator Profile */}
-            <div className="flex items-center gap-3 pl-1 sm:pl-2">
-              <div className="flex flex-col text-right hidden md:flex">
-                <span className="text-xs font-semibold text-[#F4F9FF] tracking-wide">
-                  {user?.name || 'Cmdr. Elena Rostova'}
-                </span>
-                <span className="text-[10px] text-[#48E5C3] font-mono">
-                  {user?.role || 'Expedition Command'}
+            {/* Operator Profile & Explicit Sign Out */}
+            <div className="relative flex items-center gap-3 pl-1 sm:pl-2">
+              <div 
+                className="flex items-center gap-2.5 cursor-pointer p-1 rounded-lg hover:bg-[#12212f] transition-all"
+                onClick={() => setProfileMenuOpen(prev => !prev)}
+                title="View Operator Profile & Session Controls"
+              >
+                <div className="flex flex-col text-right hidden md:flex">
+                  <span className="text-xs font-semibold text-[#F4F9FF] tracking-wide">
+                    {user?.name || 'Cmdr. Sarah Jenkins'}
+                  </span>
+                  <span className="text-[10px] text-[#48E5C3] font-mono">
+                    {user?.role || 'Expedition Command'}
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[rgba(75,177,235,0.42)] shadow-[0_0_10px_rgba(40,169,245,0.3)] bg-[#0A2940] flex items-center justify-center font-bold text-xs text-[#7BD0FF]">
+                    {user?.name ? user.name.charAt(0) : 'S'}
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#31D49A] border-2 border-[#020914]"></span>
+                </div>
+                <span className="material-symbols-outlined text-[#6E8498] text-sm hidden sm:inline">
+                  {profileMenuOpen ? 'expand_less' : 'expand_more'}
                 </span>
               </div>
 
-              <div className="relative cursor-pointer" onClick={logout} title="Click to Sign Out">
-                <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[rgba(75,177,235,0.42)] shadow-[0_0_10px_rgba(40,169,245,0.3)] bg-[#0A2940] flex items-center justify-center font-bold text-xs text-[#7BD0FF]">
-                  {user?.name ? user.name.charAt(0) : 'E'}
+              {/* Dedicated Header Log Out Button */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF6678]/15 border border-[#FF6678]/40 text-[#FF6678] hover:bg-[#FF6678] hover:text-[#020914] text-xs font-mono font-medium transition-all duration-150 shadow-sm active:scale-95 cursor-pointer"
+                title="Log Out of POLARIS C2"
+              >
+                <span className="material-symbols-outlined text-sm">logout</span>
+                <span className="hidden md:inline font-semibold">Log Out</span>
+              </button>
+
+              {/* Operator Profile Dropdown Popover */}
+              {profileMenuOpen && (
+                <div 
+                  className="absolute right-0 top-12 w-72 rounded-xl bg-[#081e30] border border-[rgba(130,190,225,0.3)] shadow-[0_12px_32px_rgba(0,0,0,0.6)] p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-start justify-between pb-3 border-b border-[rgba(130,190,225,0.15)]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-full bg-[#0d2a45] border border-[#43B8FF]/40 flex items-center justify-center font-bold text-sm text-[#7BD0FF]">
+                        {user?.name ? user.name.charAt(0) : 'S'}
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-[#F4F9FF]">{user?.name || 'Commander'}</h4>
+                        <span className="text-[10px] font-mono text-[#6E8498]">{user?.email || 'admin@polaris.aq'}</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="text-[#6E8498] hover:text-[#F4F9FF] p-0.5 rounded cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm">close</span>
+                    </button>
+                  </div>
+
+                  <div className="py-2.5 space-y-1.5 text-[11px] font-mono text-[#A9BDD0]">
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-[#6E8498]">Security Role:</span>
+                      <span className="px-1.5 py-0.5 rounded bg-[#43B8FF]/15 text-[#43B8FF] border border-[#43B8FF]/30 font-semibold">
+                        {user?.role || 'SuperAdmin'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-[#6E8498]">Station:</span>
+                      <span className="text-[#F4F9FF]">Maitri / Polar C2</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-[#6E8498]">Session:</span>
+                      <span className="text-[#31D49A] flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#31D49A] animate-pulse" />
+                        Live Encrypted
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-[rgba(130,190,225,0.15)] space-y-2">
+                    <button
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        navigate('/dashboard');
+                      }}
+                      className="w-full py-1.5 px-3 rounded-lg bg-[#0e273e] hover:bg-[#143757] text-[#7BD0FF] text-xs font-mono text-center transition-colors cursor-pointer"
+                    >
+                      Return to Command Dashboard
+                    </button>
+                    <button
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#FF6678] hover:bg-[#FF6678]/90 text-[#020914] text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(255,102,120,0.3)] cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm font-bold">logout</span>
+                      <span>Sign Out of POLARIS</span>
+                    </button>
+                  </div>
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#31D49A] border-2 border-[#020914]"></span>
-              </div>
+              )}
             </div>
           </div>
         </header>
@@ -373,8 +481,11 @@ export const AppLayout = () => {
               ))}
             </nav>
             <button
-              onClick={logout}
-              className="flex items-center gap-2 text-[#FF6678] text-xs font-mono pt-4 border-t border-[rgba(130,190,225,0.18)]"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                handleLogout();
+              }}
+              className="flex items-center gap-2 text-[#FF6678] text-xs font-mono pt-4 border-t border-[rgba(130,190,225,0.18)] cursor-pointer hover:underline"
             >
               <span className="material-symbols-outlined text-sm">logout</span> Sign Out
             </button>

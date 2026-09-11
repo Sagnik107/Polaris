@@ -1,6 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
+// Curated category and SKU specific polar depot asset photography (including user images)
+const INVENTORY_IMAGE_MAP = {
+  // Fuel & Consumables: Polar supply depot & cargo staging area
+  'ITM-001': '/images/inventory_depot.png',
+  // Machinery & Power: Antarctic Base Outpost & Generator Facility
+  'ITM-002': '/images/polar_base.png',
+  // Medical & Trauma: Medical & Cryo specimen storage container
+  'ITM-003': '/images/1.png',
+  // Communications: High-latitude satellite & comms reconnaissance
+  'ITM-004': '/images/polar_overview.png',
+  // Scientific Instrumentation: Precision coring bits & traverse equipment
+  'ITM-005': '/images/expedition_traverse.png',
+};
+
+const CATEGORY_IMAGE_FALLBACK = {
+  Consumable: '/images/inventory_depot.png',
+  'Consumables & Fuel': '/images/inventory_depot.png',
+  Machinery: '/images/polar_base.png',
+  'Heavy Machinery & Power': '/images/polar_base.png',
+  Medical: '/images/1.png',
+  'Medical & Trauma Kits': '/images/1.png',
+  Communications: '/images/polar_overview.png',
+  'Communications & Uplinks': '/images/polar_overview.png',
+  Scientific: '/images/expedition_traverse.png',
+  'Scientific Instrumentation': '/images/expedition_traverse.png',
+};
+
+const getItemImage = (item) => {
+  if (!item) return CATEGORY_IMAGE_FALLBACK.Consumable;
+  if (item.image) return item.image;
+  if (item.sku && INVENTORY_IMAGE_MAP[item.sku]) return INVENTORY_IMAGE_MAP[item.sku];
+  if (item.category && CATEGORY_IMAGE_FALLBACK[item.category]) return CATEGORY_IMAGE_FALLBACK[item.category];
+  return 'https://lh3.googleusercontent.com/aida/AEtjO1VdYxX8DOzcnxtKrhr8ZKR2tjHTSmWT8SRZ3upphrT7wRZJ8Vls9sj2v8wy1Uz17eef8kbR1ZL6Q510siFsDRLWs0Y1StbLnAhh20IPe9YLnFuY8t-Czz4AztGoGO3yy3ij0yKpE-0CmIrRZTh4CCAMMFbADfLtwdaWTbh1bXTXDcW-svaV-CLHDY7qaY1WxnNuYaR0pxj8DyfklOi-n73vGEu-xTj4m2oNicYuQMaDz_kOoRtDd0F4hzdA';
+};
+
 export const InventoryPage = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,6 +45,7 @@ export const InventoryPage = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedItemDetail, setSelectedItemDetail] = useState(null);
+  const [selectedSpotlightSku, setSelectedSpotlightSku] = useState('ITM-001');
 
   const [newItem, setNewItem] = useState({
     sku: '',
@@ -19,6 +55,7 @@ export const InventoryPage = () => {
     unit: 'Units',
     minThreshold: 20,
     base: 'Maitri',
+    image: '',
   });
 
   const defaultInventory = [
@@ -393,122 +430,154 @@ export const InventoryPage = () => {
         </div>
       </section>
 
-      {/* Featured Item Spotlight Card: ITM-001 (Direct from Stitch Screen) */}
-      <section className="rounded-xl border border-border-strong bg-surface-1 backdrop-blur-md overflow-hidden relative shadow-[0_0_16px_rgba(40,169,245,0.15)] group">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-          <div className="lg:col-span-5 relative h-48 sm:h-56 lg:h-auto min-h-[190px] overflow-hidden">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuA63ZjmYoDj71W2U6Hxf4vJxRHGHiSr7DvkEwIB0eVjAIeWAgp13yM9Ejxa1GhmzHcq-_NubKciEAufSaHd_ShQuqmvQ4KRPs361cF-N3FNqGNUyMMX7-2lRc0_QRzC7aZkb4QEuwYuuuieueYm5JSmyEgwZZl7MrpmXiQATOnAwZj2pOmDGlCkPmFr7UqDcqxzfTUQq-6dTqoRv4v0ogfPdxZs55bQogqzlIAGO3BR8HtFvIB6JFg9bQ"
-              alt="Extreme climate polar industrial diesel fuel storage tank pod"
-              className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-polar-950/40 to-surface-1 hidden lg:block" />
-            <div className="absolute top-3 left-3 flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-polar-950/80 backdrop-blur-md text-ice-300 border border-border-strong">
-                DEPOT CAM: TANK-POD-01
-              </span>
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-aurora-500/20 text-aurora-400 border border-aurora-500/40 backdrop-blur-md">
-                <span className="w-1.5 h-1.5 rounded-full bg-aurora-400 animate-pulse" />
-                FEED LIVE
-              </span>
-            </div>
-            <div className="absolute bottom-3 left-3 text-[10px] font-mono text-text-secondary bg-polar-950/80 backdrop-blur-md px-2 py-0.5 rounded border border-border-default">
-              LAT: 70°45'S | ELEV: 117m
-            </div>
-          </div>
+      {/* Featured Item Spotlight Card (Dynamically updates with distinct item photos) */}
+      {(() => {
+        const activeSpotlight = filtered.find((i) => i.sku === selectedSpotlightSku) || filtered[0] || defaultInventory[0];
+        const spotlightImg = getItemImage(activeSpotlight);
+        const isSpotlightLow = activeSpotlight.status === 'LOW STOCK' || (activeSpotlight.stock || activeSpotlight.quantity) <= (activeSpotlight.minThreshold || 20);
+        const isSpotlightMaint = activeSpotlight.status === 'MAINTENANCE';
 
-          <div className="lg:col-span-7 p-5 flex flex-col justify-between gap-4">
-            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border-default pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-polar-800 border border-warning/40 flex items-center justify-center text-warning shadow-[0_0_8px_rgba(246,200,95,0.25)]">
-                  <span className="material-symbols-outlined text-lg">local_gas_station</span>
+        return (
+          <section className="rounded-xl border border-border-strong bg-surface-1 backdrop-blur-md overflow-hidden relative shadow-[0_0_16px_rgba(40,169,245,0.15)] group">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+              <div className="lg:col-span-5 relative h-52 sm:h-60 lg:h-auto min-h-[210px] overflow-hidden">
+                <img
+                  src={spotlightImg}
+                  alt={activeSpotlight.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-polar-950/40 to-surface-1 hidden lg:block" />
+                <div className="absolute top-3 left-3 flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-polar-950/80 backdrop-blur-md text-ice-300 border border-border-strong">
+                    DEPOT CAM: {activeSpotlight.sku} [{activeSpotlight.base || 'MAITRI'}]
+                  </span>
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-aurora-500/20 text-aurora-400 border border-aurora-500/40 backdrop-blur-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-aurora-400 animate-pulse" />
+                    FEED LIVE
+                  </span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 font-mono text-xs">
-                    <span className="text-ice-400">ITM-001</span>
-                    <span className="text-border-strong">•</span>
-                    <span className="text-text-muted">PRIMARY RESERVE</span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[10px] font-semibold bg-warning/15 text-warning border border-warning/40">
-                      <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
-                      LOW STOCK ALERT
+                <div className="absolute bottom-3 left-3 text-[10px] font-mono text-text-secondary bg-polar-950/80 backdrop-blur-md px-2 py-0.5 rounded border border-border-default">
+                  LAT: 70°45'S | ELEV: 117m | SECTOR: {activeSpotlight.category || 'GENERAL'}
+                </div>
+              </div>
+
+              <div className="lg:col-span-7 p-5 flex flex-col justify-between gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border-default pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-polar-800 border border-ice-400/40 flex items-center justify-center text-ice-300 shadow-[0_0_8px_rgba(40,169,245,0.25)]">
+                      <span className="material-symbols-outlined text-lg">{activeSpotlight.icon || 'inventory_2'}</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 font-mono text-xs">
+                        <span className="text-ice-400 font-bold">{activeSpotlight.sku}</span>
+                        <span className="text-border-strong">•</span>
+                        <span className="text-text-muted uppercase">{activeSpotlight.category}</span>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[10px] font-semibold ${
+                            isSpotlightLow
+                              ? 'bg-warning/15 text-warning border border-warning/40'
+                              : isSpotlightMaint
+                              ? 'bg-ice-500/15 text-ice-300 border border-border-strong'
+                              : 'bg-success/15 text-success border border-success/40'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${isSpotlightLow ? 'bg-warning animate-pulse' : isSpotlightMaint ? 'bg-ice-400' : 'bg-success'}`} />
+                          {activeSpotlight.status || (isSpotlightLow ? 'LOW STOCK ALERT' : 'NOMINAL IN STOCK')}
+                        </span>
+                      </div>
+                      <h2 className="font-headline text-lg font-bold text-text-primary">
+                        {activeSpotlight.name}
+                      </h2>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedItemDetail(activeSpotlight)}
+                    className="inline-flex items-center gap-1 text-xs font-mono text-ice-400 hover:text-text-primary px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-default cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">visibility</span>
+                    <span>Inspect Asset</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+                  <div className="p-2.5 rounded-lg bg-polar-850 border border-border-default">
+                    <div className="text-text-muted text-[10px]">CURRENT STOCK VOL</div>
+                    <div className={`text-sm font-semibold mt-0.5 ${isSpotlightLow ? 'text-warning' : 'text-text-primary'}`}>
+                      {activeSpotlight.stock || activeSpotlight.quantity} {activeSpotlight.unit || 'Units'}{' '}
+                      <span className="text-text-muted text-xs font-normal">/ {activeSpotlight.max || 100}</span>
+                    </div>
+                    <div className="w-full bg-polar-900 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                      <div
+                        className={`h-full ${isSpotlightLow ? 'bg-warning' : isSpotlightMaint ? 'bg-ice-400' : 'bg-success'}`}
+                        style={{
+                          width: `${Math.min(100, (((activeSpotlight.stock || activeSpotlight.quantity) / (activeSpotlight.max || 100)) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-polar-850 border border-border-default">
+                    <div className="text-text-muted text-[10px]">SAFETY CRITICAL</div>
+                    <div className="text-text-primary text-sm font-semibold mt-0.5">
+                      {activeSpotlight.threshold || `Min ${activeSpotlight.minThreshold || 20}`}
+                    </div>
+                    <div className={`text-[10px] mt-1 flex items-center gap-0.5 ${isSpotlightLow ? 'text-danger' : 'text-success'}`}>
+                      <span className="material-symbols-outlined text-xs">
+                        {isSpotlightLow ? 'warning' : 'check_circle'}
+                      </span>
+                      {isSpotlightLow ? 'Replenishment Reqd' : 'Buffer Optimal'}
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-polar-850 border border-border-default">
+                    <div className="text-text-muted text-[10px]">DEPOT LOCATION</div>
+                    <div className="text-ice-300 text-sm font-semibold mt-0.5 truncate">
+                      {activeSpotlight.base || 'Maitri Station'}
+                    </div>
+                    <div className="text-text-muted text-[10px] mt-1">Telemetry Online</div>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-polar-850 border border-border-default">
+                    <div className="text-text-muted text-[10px]">CONSUMPTION DELTA</div>
+                    <div className="text-text-primary text-sm font-semibold mt-0.5">Nominal Rate</div>
+                    <div className="text-aurora-400 text-[10px] mt-1 flex items-center gap-0.5">
+                      <span className="material-symbols-outlined text-xs">timelapse</span>
+                      Stable Projection
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs font-mono">
+                  <div className="flex items-center gap-4 text-text-muted">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sm text-ice-400">location_on</span>
+                      {activeSpotlight.base || 'Station Perimeter'}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sm text-aurora-400">shield</span>
+                      Sub-zero Climate Shield Active
                     </span>
                   </div>
-                  <h2 className="font-headline text-lg font-bold text-text-primary">
-                    Arctic Grade Polar Diesel & Generator Station #2
-                  </h2>
-                </div>
-              </div>
-              <button className="inline-flex items-center gap-1 text-xs font-mono text-ice-400 hover:text-text-primary px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-default cursor-pointer">
-                <span className="material-symbols-outlined text-sm">tune</span>
-                <span>Calibrate Flow</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
-              <div className="p-2.5 rounded-lg bg-polar-850 border border-border-default">
-                <div className="text-text-muted text-[10px]">CURRENT TANK VOL</div>
-                <div className="text-warning text-sm font-semibold mt-0.5">
-                  200 L <span className="text-text-muted text-xs font-normal">/ 1,000 L</span>
-                </div>
-                <div className="w-full bg-polar-900 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                  <div className="bg-warning h-full w-[20%]" />
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-polar-850 border border-border-default">
-                <div className="text-text-muted text-[10px]">SAFETY CRITICAL</div>
-                <div className="text-text-primary text-sm font-semibold mt-0.5">Min 250 L</div>
-                <div className="text-danger text-[10px] mt-1 flex items-center gap-0.5">
-                  <span className="material-symbols-outlined text-xs">arrow_downward</span>
-                  -50 L Deficit
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-polar-850 border border-border-default">
-                <div className="text-text-muted text-[10px]">GEN OUTFEED TEMP</div>
-                <div className="text-ice-300 text-sm font-semibold mt-0.5">+48.2°C</div>
-                <div className="text-text-muted text-[10px] mt-1">Coolant nominal</div>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-polar-850 border border-border-default">
-                <div className="text-text-muted text-[10px]">DRAIN RATE (HOURLY)</div>
-                <div className="text-text-primary text-sm font-semibold mt-0.5">8.4 L/hr</div>
-                <div className="text-aurora-400 text-[10px] mt-1 flex items-center gap-0.5">
-                  <span className="material-symbols-outlined text-xs">timelapse</span>
-                  ~23.8 hrs left
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => alert(`Sensor Array Telemetry for ${activeSpotlight.sku}: All thermal sensors nominal.`)}
+                      className="px-3 py-1 rounded bg-surface-2 hover:bg-surface-3 border border-border-default text-text-secondary hover:text-text-primary cursor-pointer"
+                    >
+                      View Sensor Array
+                    </button>
+                    <button
+                      onClick={() => alert(`Initiating priority restock dispatch for ${activeSpotlight.name} (${activeSpotlight.sku}).`)}
+                      className="px-3 py-1 rounded bg-gradient-to-r from-ice-500 to-[#168FE0] hover:brightness-110 text-polar-950 font-semibold shadow-[0_0_12px_rgba(40,169,245,0.3)] cursor-pointer"
+                    >
+                      Initiate Priority Restock
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs font-mono">
-              <div className="flex items-center gap-4 text-text-muted">
-                <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-sm text-ice-400">location_on</span>
-                  Maitri Depot Outer Periphery
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-sm text-aurora-400">ac_unit</span>
-                  Rime Ice Inhibitor Active
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => alert('Sensor Array Telemetry: All 12 thermal sensors online. Pressure nominal at 1.4 Bar.')}
-                  className="px-3 py-1 rounded bg-surface-2 hover:bg-surface-3 border border-border-default text-text-secondary hover:text-text-primary cursor-pointer"
-                >
-                  View Sensor Array
-                </button>
-                <button
-                  onClick={() => alert('Initiating priority fuel restock dispatch from Cape Town depot via RV Polar Star.')}
-                  className="px-3 py-1 rounded bg-gradient-to-r from-ice-500 to-[#168FE0] hover:brightness-110 text-polar-950 font-semibold shadow-[0_0_12px_rgba(40,169,245,0.3)] cursor-pointer"
-                >
-                  Initiate Priority Restock
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+          </section>
+        );
+      })()}
 
       {/* Inventory Data Table (High Information Density) */}
       <section className="rounded-xl border border-border-default bg-surface-1 backdrop-blur-md overflow-hidden shadow-sm">
@@ -516,6 +585,7 @@ export const InventoryPage = () => {
           <table className="w-full text-left border-collapse font-mono text-xs">
             <thead>
               <tr className="h-11 border-b border-border-strong bg-polar-800/80 uppercase tracking-wider text-text-muted">
+                <th className="px-3 py-2 font-semibold w-16">Scan</th>
                 <th className="px-4 py-2 font-semibold">Item SKU</th>
                 <th className="px-4 py-2 font-semibold">Asset Name</th>
                 <th className="px-4 py-2 font-semibold">Category</th>
@@ -530,13 +600,29 @@ export const InventoryPage = () => {
               {filtered.map((item, idx) => {
                 const isLow = item.status === 'LOW STOCK' || item.stock <= (item.minThreshold || 10);
                 const isMaint = item.status === 'MAINTENANCE';
+                const itemImg = getItemImage(item);
+                const isCurrentSpotlight = selectedSpotlightSku === item.sku;
 
                 return (
                   <tr
                     key={item.sku || idx}
-                    className="h-12 hover:bg-surface-2 transition-colors duration-150 group cursor-pointer"
-                    onClick={() => setSelectedItemDetail(item)}
+                    className={`h-14 hover:bg-surface-2 transition-colors duration-150 group cursor-pointer ${
+                      isCurrentSpotlight ? 'bg-surface-2/60 border-l-2 border-ice-400' : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedSpotlightSku(item.sku);
+                      setSelectedItemDetail(item);
+                    }}
                   >
+                    <td className="px-3 py-2">
+                      <div className="w-12 h-9 rounded overflow-hidden border border-border-default group-hover:border-ice-400/60 transition-all">
+                        <img
+                          src={itemImg}
+                          alt={item.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                    </td>
                     <td className="px-4 py-2 text-ice-300 font-semibold">{item.sku}</td>
                     <td className="px-4 py-2">
                       <div className="font-medium text-text-primary flex items-center gap-2">
@@ -591,7 +677,7 @@ export const InventoryPage = () => {
                     </td>
                     <td className="px-4 py-2 text-right">
                       <button className="inline-flex items-center gap-1 text-ice-400 hover:text-text-primary px-2 py-1 rounded bg-surface-1 border border-border-default hover:border-border-strong transition-all duration-150">
-                        <span>View Detail</span>
+                        <span>Inspect</span>
                         <span className="material-symbols-outlined text-xs">arrow_forward</span>
                       </button>
                     </td>
@@ -615,6 +701,23 @@ export const InventoryPage = () => {
               <button onClick={() => setSelectedItemDetail(null)} className="text-text-muted hover:text-text-primary cursor-pointer">
                 <span className="material-symbols-outlined">close</span>
               </button>
+            </div>
+
+            {/* Modal Asset Image Banner */}
+            <div className="relative w-full h-44 rounded-lg overflow-hidden border border-border-default">
+              <img
+                src={getItemImage(selectedItemDetail)}
+                alt={selectedItemDetail.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-polar-950 via-transparent to-transparent" />
+              <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-polar-950/80 backdrop-blur-md text-[10px] text-ice-300 border border-border-default">
+                SCAN #{selectedItemDetail.sku}
+              </div>
+              <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-polar-950/80 backdrop-blur-md text-[10px] text-aurora-400 border border-border-default flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-aurora-400 animate-pulse" />
+                <span>DEPOT SENSOR CALIBRATED</span>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -744,6 +847,47 @@ export const InventoryPage = () => {
                     className="w-full p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-text-muted mb-1 uppercase">Asset Picture (File or URL)</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={newItem.image}
+                    onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
+                    placeholder="https://... or upload image"
+                    className="flex-1 p-2.5 rounded-lg bg-polar-850 border border-border-default text-text-primary outline-none focus:border-border-focus"
+                  />
+                  <label className="px-3 py-2.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-strong text-ice-300 hover:text-white cursor-pointer transition-all whitespace-nowrap">
+                    <span>Browse</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setNewItem({ ...newItem, image: ev.target.result });
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                {newItem.image && (
+                  <div className="mt-2 relative w-full h-24 rounded-lg overflow-hidden border border-border-strong">
+                    <img src={newItem.image} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setNewItem({ ...newItem, image: '' })}
+                      className="absolute top-1 right-1 bg-polar-950/80 text-danger text-[10px] px-1.5 py-0.5 rounded border border-danger/40 cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-border-default">
