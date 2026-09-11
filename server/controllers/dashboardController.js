@@ -8,7 +8,7 @@ const Task = require('../models/Task');
 const Incident = require('../models/Incident');
 const Alert = require('../models/Alert');
 const ActivityLog = require('../models/ActivityLog');
-const { mockExpeditions, mockCargo, mockAlerts, mockPersonnel, mockInventory, mockIncidents, mockTasks, mockBases } = require('../services/mockDataService');
+const { mockExpeditions, mockCargo, mockAlerts, mockPersonnel, mockInventory, mockIncidents, mockTasks, mockBases, mockAssets } = require('../services/mockDataService');
 
 const getDashboardSummary = async (req, res, next) => {
   try {
@@ -34,6 +34,23 @@ const getDashboardSummary = async (req, res, next) => {
       const inTransitCargoList = mockCargo.filter(c => c.status === 'InTransit' || c.status === 'In Transit');
       const criticalAlertsList = mockAlerts.filter(a => a.severity === 'Critical');
 
+      // Accurate Inventory Sync
+      const lowStockList = mockInventory.filter(
+        i => i.status === 'Low Stock' || i.status === 'LowStock' || (i.quantity !== undefined && i.minThreshold !== undefined && Number(i.quantity) <= Number(i.minThreshold))
+      );
+      const fuelItems = mockInventory.filter(
+        i => (i.category && i.category.toLowerCase().includes('fuel')) || (i.name && i.name.toLowerCase().includes('fuel')) || (i.itemName && i.itemName.toLowerCase().includes('fuel')) || (i.itemName && i.itemName.toLowerCase().includes('diesel'))
+      );
+      const totalFuelLiters = fuelItems.reduce((acc, i) => acc + (Number(i.quantity) || 0), 0);
+      const medicalItems = mockInventory.filter(
+        i => (i.category && i.category.toLowerCase().includes('medical')) || (i.itemName && i.itemName.toLowerCase().includes('plasma')) || (i.itemName && i.itemName.toLowerCase().includes('antibiotic'))
+      );
+      const totalMedicalUnits = medicalItems.reduce((acc, i) => acc + (Number(i.quantity) || 0), 0);
+
+      // Accurate Assets Sync
+      const assetsList = mockAssets || [];
+      const operationalAssets = assetsList.filter(a => a.status === 'Operational' || a.status === 'Active').length;
+
       return res.json({
         success: true,
         data: {
@@ -53,14 +70,32 @@ const getDashboardSummary = async (req, res, next) => {
             criticalAlerts: criticalAlertsList.length || 1,
             unreadAlerts: mockAlerts.filter(a => !a.isRead).length || 3,
             activeEmergencies: mockIncidents.length || 1,
-            lowStockItems: mockInventory.filter(i => i.status === 'LowStock').length || 2,
+            lowStockItems: lowStockList.length,
+            totalInventory: mockInventory.length,
+            fuelReservesLiters: totalFuelLiters || 20900,
+            medicalPlasmaUnits: totalMedicalUnits || 12,
+            totalAssets: assetsList.length || 9,
+            operationalAssets: operationalAssets || 8,
             overdueTasks: mockTasks.filter(t => t.status === 'Overdue').length || 1,
+            totalTasks: mockTasks.length || 8,
           },
           readinessScore: avgReadiness,
           activeEmergencies: mockIncidents.length || 1,
-          lowStockCount: mockInventory.filter(i => i.status === 'LowStock').length || 2,
+          lowStockCount: lowStockList.length,
           delayedCargoCount: delayedCargoList.length || 2,
           overdueTasksCount: mockTasks.filter(t => t.status === 'Overdue').length || 1,
+          inventoryMetrics: {
+            totalItems: mockInventory.length,
+            lowStockCount: lowStockList.length,
+            fuelLiters: totalFuelLiters || 20900,
+            medicalUnits: totalMedicalUnits || 12,
+            lowStockItems: lowStockList,
+          },
+          assetMetrics: {
+            total: assetsList.length || 9,
+            operational: operationalAssets || 8,
+            maintenance: assetsList.filter(a => a.status === 'Maintenance').length,
+          },
           activeExpeditionsList: activeExpeditions,
           bases: mockBases,
           personnelByBase: mockBases.map(b => ({ _id: b.name, count: b.currentPersonnel })),

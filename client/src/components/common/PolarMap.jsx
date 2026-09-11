@@ -53,10 +53,11 @@ export const PolarMap = ({
         scrollWheelZoom={false}
         style={{ height: '100%', width: '100%', background: '#020914' }}
       >
-        {/* CartoDB Dark Matter tile layer for slick polar dark mode */}
+        {/* Standard Leaflet OpenStreetMap tile layer */}
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
         />
 
         {/* Route vectors */}

@@ -741,7 +741,7 @@ export const ReportsPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs font-mono pt-2">
             <div>
               <span className="text-slate-500 text-[10px] uppercase block">Operations Officer:</span>
-              <div className="mt-1 font-bold text-white">Commander Sarah Jenkins</div>
+              <div className="mt-1 font-bold text-white">Commander Radhika Roy</div>
               <div className="text-[10px] text-slate-400">Chief Polar Logistics Officer // POL-0001</div>
             </div>
 

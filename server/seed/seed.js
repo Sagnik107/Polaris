@@ -97,7 +97,7 @@ const seedData = async () => {
 
     const users = await User.create([
       {
-        name: 'Commander Sarah Jenkins',
+        name: 'Commander Radhika Roy',
         email: 'admin@polaris.aq',
         password: defaultPassword,
         role: 'SuperAdmin',
@@ -113,7 +113,7 @@ const seedData = async () => {
         isActive: true,
       },
       {
-        name: 'Elena Rostova',
+        name: 'Ananya Sharma',
         email: 'logistics@polaris.aq',
         password: defaultPassword,
         role: 'LogisticsCoordinator',
@@ -121,7 +121,7 @@ const seedData = async () => {
         isActive: true,
       },
       {
-        name: 'Marcus Vance',
+        name: 'Rohan Verma',
         email: 'inventory@polaris.aq',
         password: defaultPassword,
         role: 'InventoryManager',
@@ -129,7 +129,7 @@ const seedData = async () => {
         isActive: true,
       },
       {
-        name: 'Capt. Thomas Lindqvist',
+        name: 'Capt. Amitav Banerjee',
         email: 'base.maitri@polaris.aq',
         password: defaultPassword,
         role: 'BaseOfficer',
@@ -145,7 +145,7 @@ const seedData = async () => {
         isActive: true,
       },
       {
-        name: 'Sofia Al-Mansoor',
+        name: 'Priya Venkat',
         email: 'personnel@polaris.aq',
         password: defaultPassword,
         role: 'PersonnelManager',
@@ -153,7 +153,7 @@ const seedData = async () => {
         isActive: true,
       },
       {
-        name: 'General Staff Observer',
+        name: 'Alok Mathur',
         email: 'viewer@polaris.aq',
         password: defaultPassword,
         role: 'Viewer',
@@ -169,24 +169,24 @@ const seedData = async () => {
     const personnelList = await Personnel.create([
       { name: 'Dr. Rajesh Sharma', employeeId: 'POL-0101', role: 'Lead Glaciologist', department: 'Science', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543210', skills: ['Ice Core Sampling', 'Cryosphere Modeling'] },
       { name: 'Dr. Maya Patel', employeeId: 'POL-0102', role: 'Chief Medical Officer', department: 'Medical', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543211', skills: ['Hypothermia Protocol', 'Tele-Surgery'] },
-      { name: 'Elena Rostova', employeeId: 'POL-0103', role: 'Logistics Flight Director', department: 'Logistics', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+7-9123456789', skills: ['Air Delivery Drop', 'Cargo Manifest'] },
+      { name: 'Pooja Deshmukh', employeeId: 'POL-0103', role: 'Logistics Flight Director', department: 'Logistics', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543214', skills: ['Air Delivery Drop', 'Cargo Manifest'] },
       { name: 'Vikram Sengupta', employeeId: 'POL-0104', role: 'Chief Electrical Engineer', department: 'Operations', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543212', skills: ['Turbine Overhaul', 'Microgrid'] },
-      { name: 'Dr. Aris Thorne', employeeId: 'POL-0105', role: 'Atmospheric Physicist', department: 'Science', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+44-7700900123', skills: ['LIDAR Sensing', 'Ozone Profiling'] },
-      { name: 'Capt. Thomas Lindqvist', employeeId: 'POL-0106', role: 'Station Base Commander', department: 'Command', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+46-701234567', skills: ['Ice Navigation', 'Hazard Mitigation'] },
-      { name: 'Marcus Vance', employeeId: 'POL-0107', role: 'Quartermaster & Fuel Officer', department: 'Logistics', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+1-2025550144', skills: ['Fuel Cryo-storage', 'Inventory ERP'] },
-      { name: 'Dr. Astrid Lindholm', employeeId: 'POL-0108', role: 'Geomagnetician', department: 'Science', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+47-98765432', skills: ['Magnetometry', 'Aurora Telemetry'] },
-      { name: 'Dmitri Voronov', employeeId: 'POL-0109', role: 'Heavy Machinery Tech', department: 'Operations', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+7-9876543210', skills: ['PistenBully Repair', 'Hydraulics'] },
+      { name: 'Dr. Arvind Swaminathan', employeeId: 'POL-0105', role: 'Atmospheric Physicist', department: 'Science', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543220', skills: ['LIDAR Sensing', 'Ozone Profiling'] },
+      { name: 'Capt. Amitav Banerjee', employeeId: 'POL-0106', role: 'Station Base Commander', department: 'Command', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543215', skills: ['Ice Navigation', 'Hazard Mitigation'] },
+      { name: 'Rohan Verma', employeeId: 'POL-0107', role: 'Quartermaster & Fuel Officer', department: 'Logistics', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543221', skills: ['Fuel Cryo-storage', 'Inventory ERP'] },
+      { name: 'Dr. Aditi Mukherjee', employeeId: 'POL-0108', role: 'Geomagnetician', department: 'Science', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543222', skills: ['Magnetometry', 'Aurora Telemetry'] },
+      { name: 'Arjun Nair', employeeId: 'POL-0109', role: 'Heavy Machinery Tech', department: 'Operations', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543216', skills: ['PistenBully Repair', 'Hydraulics'] },
       { name: 'Sanjay Deshmukh', employeeId: 'POL-0110', role: 'Communications Specialist', department: 'Operations', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543213', skills: ['SATCOM', 'HF Long Range Radio'] },
-      { name: 'Dr. Ingrid Hansen', employeeId: 'POL-0111', role: 'Arctic Marine Biologist', department: 'Science', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+47-12345678', skills: ['Plankton Trawling', 'DNA Barcoding'] },
-      { name: 'Lars Olofsson', employeeId: 'POL-0112', role: 'Field Safety Officer', department: 'Operations', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+47-23456789', skills: ['Polar Bear Defense', 'Glacier Rescue'] },
-      { name: 'Priya Nambiar', employeeId: 'POL-0113', role: 'Aerosol Scientist', department: 'Science', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543214', skills: ['Spectrophotometry', 'Black Carbon'] },
-      { name: 'Capt. Robert Falcon', employeeId: 'POL-0114', role: 'Master Navigator', department: 'Command', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+44-7700900456', skills: ['Icebreaker Pilotage', 'Sonar Bathymetry'] },
-      { name: 'Dr. Chloe Dubois', employeeId: 'POL-0115', role: 'Oceanographer', department: 'Science', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+33-612345678', skills: ['CTD Rosette', 'Ocean Currents'] },
+      { name: 'Dr. Sunita Rao', employeeId: 'POL-0111', role: 'Arctic Marine Biologist', department: 'Science', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543217', skills: ['Plankton Trawling', 'DNA Barcoding'] },
+      { name: 'Lt. Col. Pradeep Rawat', employeeId: 'POL-0112', role: 'Field Safety Officer', department: 'Operations', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543223', skills: ['Polar Defense', 'Glacier Rescue'] },
+      { name: 'Priya Nambiar', employeeId: 'POL-0113', role: 'Aerosol Scientist', department: 'Science', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543224', skills: ['Spectrophotometry', 'Black Carbon'] },
+      { name: 'Capt. Manpreet Singh', employeeId: 'POL-0114', role: 'Master Navigator', department: 'Command', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543225', skills: ['Icebreaker Pilotage', 'Sonar Bathymetry'] },
+      { name: 'Dr. Kavita Krishnan', employeeId: 'POL-0115', role: 'Oceanographer', department: 'Science', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543226', skills: ['CTD Rosette', 'Ocean Currents'] },
       { name: 'Tenzing Sherpa', employeeId: 'POL-0116', role: 'Crevasse Rescue Specialist', department: 'Operations', base: bBharati._id, baseName: 'Bharati Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+977-980123456', skills: ['Alpine Mountaineering', 'Deep Rigging'] },
-      { name: 'Dr. Alexei Mikhailov', employeeId: 'POL-0117', role: 'Seismologist', department: 'Science', base: bMaitri._id, baseName: 'Maitri Station', status: 'Leave', medicalClearance: 'Cleared', emergencyContact: '+7-9876543211', skills: ['Broadband Seismometer', 'Inversion'] },
-      { name: 'Ananya Roy', employeeId: 'POL-0118', role: 'Field Paramedic', department: 'Medical', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543215', skills: ['Frostbite Debridement', 'Emergency Triage'] },
-      { name: 'Klaus Mueller', employeeId: 'POL-0119', role: 'Instrumentation Engineer', department: 'Operations', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+49-151234567', skills: ['PLC Automation', 'Cold Sensors'] },
-      { name: 'Sunil Gavaskar', employeeId: 'POL-0120', role: 'Vessel Chief Mate', department: 'Operations', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543216', skills: ['Deck Cranes', 'Sea Ice Mooring'] },
+      { name: 'Dr. Suresh Menon', employeeId: 'POL-0117', role: 'Seismologist', department: 'Science', base: bMaitri._id, baseName: 'Maitri Station', status: 'Leave', medicalClearance: 'Cleared', emergencyContact: '+91-9876543227', skills: ['Broadband Seismometer', 'Inversion'] },
+      { name: 'Ananya Roy', employeeId: 'POL-0118', role: 'Field Paramedic', department: 'Medical', base: bMaitri._id, baseName: 'Maitri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543228', skills: ['Frostbite Debridement', 'Emergency Triage'] },
+      { name: 'Devendra Pratap', employeeId: 'POL-0119', role: 'Instrumentation Engineer', department: 'Operations', base: bHimadri._id, baseName: 'Himadri Station', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543218', skills: ['PLC Automation', 'Cold Sensors'] },
+      { name: 'Sunil Gavaskar', employeeId: 'POL-0120', role: 'Vessel Chief Mate', department: 'Operations', base: bVessel._id, baseName: 'RV Bharati', status: 'Active', medicalClearance: 'Cleared', emergencyContact: '+91-9876543229', skills: ['Deck Cranes', 'Sea Ice Mooring'] },
     ]);
 
     console.log('[POLARIS SEED] Seeding Expeditions...');

@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { useEmergency } from '../context/EmergencyContext';
 import EmergencyBanner from '../components/common/EmergencyBanner';
 import Modal from '../components/common/Modal';
+import SosDispatchModal from '../components/emergency/SosDispatchModal';
 
 export const AppLayout = () => {
   const { user, logout, hasRole } = useAuth();
   const { unreadAlertsCount, activeEmergency } = useSocket();
+  const { openSosModal, stats: emergencyStats } = useEmergency();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -173,11 +176,21 @@ export const AppLayout = () => {
         <div className="flex flex-col gap-2.5 pt-3 border-t border-[rgba(130,190,225,0.18)]">
           {/* Emergency Dispatch Action Button */}
           <button
-            onClick={() => navigate('/emergency')}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[rgba(7,24,39,0.82)] border border-[#FF6678]/40 text-[#FF6678] hover:bg-[#FF6678] hover:text-[#020914] font-mono text-xs transition-all duration-150 shadow-[0_0_12px_rgba(255,102,120,0.15)] active:scale-95 cursor-pointer"
+            onClick={() => openSosModal()}
+            className={`w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-mono text-xs transition-all duration-150 active:scale-95 cursor-pointer border ${
+              emergencyStats?.critical > 0
+                ? 'bg-rose-950/80 border-rose-500 text-rose-300 shadow-[0_0_16px_rgba(244,63,94,0.4)] animate-pulse'
+                : 'bg-[rgba(7,24,39,0.82)] border-[#FF6678]/40 text-[#FF6678] hover:bg-[#FF6678] hover:text-[#020914] shadow-[0_0_12px_rgba(255,102,120,0.15)]'
+            }`}
+            title="Mobilize Tactical SOS Emergency Dispatch Unit"
           >
             <span className="material-symbols-outlined text-sm">sos</span>
             <span>Emergency Dispatch</span>
+            {emergencyStats?.critical > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-bold">
+                {emergencyStats.critical}
+              </span>
+            )}
           </button>
 
           {/* Dedicated Log Out Button in Sidebar */}
@@ -310,7 +323,7 @@ export const AppLayout = () => {
               >
                 <div className="flex flex-col text-right hidden md:flex">
                   <span className="text-xs font-semibold text-[#F4F9FF] tracking-wide">
-                    {user?.name || 'Cmdr. Sarah Jenkins'}
+                    {user?.name || 'Cmdr. Radhika Roy'}
                   </span>
                   <span className="text-[10px] text-[#48E5C3] font-mono">
                     {user?.role || 'Expedition Command'}
@@ -319,7 +332,7 @@ export const AppLayout = () => {
 
                 <div className="relative">
                   <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[rgba(75,177,235,0.42)] shadow-[0_0_10px_rgba(40,169,245,0.3)] bg-[#0A2940] flex items-center justify-center font-bold text-xs text-[#7BD0FF]">
-                    {user?.name ? user.name.charAt(0) : 'S'}
+                    {user?.name ? user.name.charAt(0) : 'R'}
                   </div>
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#31D49A] border-2 border-[#020914]"></span>
                 </div>
@@ -347,10 +360,10 @@ export const AppLayout = () => {
                   <div className="flex items-start justify-between pb-3 border-b border-[rgba(130,190,225,0.15)]">
                     <div className="flex items-center gap-2.5">
                       <div className="w-10 h-10 rounded-full bg-[#0d2a45] border border-[#43B8FF]/40 flex items-center justify-center font-bold text-sm text-[#7BD0FF]">
-                        {user?.name ? user.name.charAt(0) : 'S'}
+                        {user?.name ? user.name.charAt(0) : 'R'}
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-[#F4F9FF]">{user?.name || 'Commander'}</h4>
+                        <h4 className="text-xs font-bold text-[#F4F9FF]">{user?.name || 'Commander Radhika Roy'}</h4>
                         <span className="text-[10px] font-mono text-[#6E8498]">{user?.email || 'admin@polaris.aq'}</span>
                       </div>
                     </div>
@@ -413,7 +426,9 @@ export const AppLayout = () => {
         {/* MAIN CONTENT CANVAS (1600px Max Fluid Responsive Container) */}
         {/* ========================================================================= */}
         <main className="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
-          <EmergencyBanner emergency={activeEmergency} />
+          {location.pathname !== '/dashboard' && location.pathname !== '/emergency' && (
+            <EmergencyBanner emergency={activeEmergency} />
+          )}
           <Outlet />
         </main>
       </div>
@@ -492,6 +507,9 @@ export const AppLayout = () => {
           </div>
         </div>
       )}
+
+      {/* Unified Global Tactical SOS Emergency Dispatch Modal */}
+      <SosDispatchModal />
     </div>
   );
 };

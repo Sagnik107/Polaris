@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
+import { EmergencyProvider } from './context/EmergencyContext';
 import AppLayout from './layouts/AppLayout';
 
 import LandingPage from './pages/LandingPage';
@@ -51,11 +52,12 @@ export function App() {
   return (
     <AuthProvider>
       <SocketProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
+        <EmergencyProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
 
             {/* Authenticated Application Shell */}
             <Route
@@ -94,9 +96,10 @@ export function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </SocketProvider>
-    </AuthProvider>
-  );
+      </EmergencyProvider>
+    </SocketProvider>
+  </AuthProvider>
+);
 }
 
 export default App;

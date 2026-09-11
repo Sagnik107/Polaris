@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
+import { useEmergency } from '../context/EmergencyContext';
 import { getSocket } from '../services/socket';
 import Modal from '../components/common/Modal';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
-  const { recentEvents } = useSocket();
+  const { recentEvents, activeEmergency } = useSocket();
+  const emergencyContext = useEmergency();
+  const activeIncidents = emergencyContext?.activeIncidents || [];
 
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -58,25 +61,44 @@ export const DashboardPage = () => {
       alerts: 4,
       planningExpeditions: 1,
       criticalAlerts: 1,
+      inventoryItems: 14,
+      lowStockItems: 2,
+      fuelReservesLiters: 20900,
+      fuelMaitri: 84500,
+      fuelBharati: 112000,
+      medicalPlasmaUnits: 12,
+      medicalThreshold: 25,
+      isMedicalLow: true,
+      operationalAssets: 8,
+      totalAssets: 9,
+      assetReadinessPercent: 89,
+      overdueTasks: 1,
+      totalTasks: 8,
     },
     expeditions: [],
     bases: [],
     cargos: [],
     incidents: [],
     alerts: [],
+    inventory: [],
+    assets: [],
+    tasks: [],
     readinessScore: 87,
   });
 
   const fetchDashboard = async (isManual = false) => {
     if (isManual) setIsRefreshing(true);
     try {
-      const [dashRes, expRes, basesRes, cargoRes, incRes, alertRes] = await Promise.all([
+      const [dashRes, expRes, basesRes, cargoRes, incRes, alertRes, invRes, assetRes, taskRes] = await Promise.all([
         api.get('/dashboard').catch(() => ({ data: { success: false } })),
         api.get('/expeditions?limit=8').catch(() => ({ data: { success: false } })),
         api.get('/bases').catch(() => ({ data: { success: false } })),
         api.get('/cargo?limit=6').catch(() => ({ data: { success: false } })),
         api.get('/incidents?limit=4').catch(() => ({ data: { success: false } })),
         api.get('/alerts?limit=6').catch(() => ({ data: { success: false } })),
+        api.get('/inventory').catch(() => ({ data: { success: false } })),
+        api.get('/assets').catch(() => ({ data: { success: false } })),
+        api.get('/tasks?limit=6').catch(() => ({ data: { success: false } })),
       ]);
 
       const dashData = dashRes.data?.data;
@@ -85,6 +107,9 @@ export const DashboardPage = () => {
       const cargosList = cargoRes.data?.data || [];
       const incidentsList = incRes.data?.data || [];
       const alertsList = alertRes.data?.data || dashData?.recentActivity || [];
+      const inventoryList = invRes.data?.data || [];
+      const assetsList = assetRes.data?.data || [];
+      const tasksList = taskRes.data?.data || [];
 
       // Calculate dynamic readiness score
       let calculatedReadiness = dashData?.readinessScore || 87;
@@ -96,6 +121,34 @@ export const DashboardPage = () => {
       // Personnel total
       const totalPersonnel = basesList.reduce((acc, b) => acc + (b.currentPersonnel || 0), 0) || 124;
 
+      // Inventory computations
+      const lowStockItems = inventoryList.filter(
+        i => i.status === 'Low Stock' || i.status === 'LowStock' || (i.quantity !== undefined && i.minThreshold !== undefined && Number(i.quantity) <= Number(i.minThreshold))
+      );
+      const fuelItems = inventoryList.filter(
+        i => (i.category && i.category.toLowerCase().includes('fuel')) || (i.name && i.name.toLowerCase().includes('fuel')) || (i.itemName && i.itemName.toLowerCase().includes('fuel')) || (i.itemName && i.itemName.toLowerCase().includes('diesel'))
+      );
+      const totalFuelLiters = fuelItems.reduce((acc, i) => acc + (Number(i.quantity) || 0), 0) || dashData?.kpis?.fuelReservesLiters || 20900;
+      const maitriFuel = fuelItems.filter(i => (i.baseName || '').toLowerCase().includes('maitri')).reduce((acc, i) => acc + (Number(i.quantity) || 0), 0) || 84500;
+      const bharatiFuel = fuelItems.filter(i => (i.baseName || '').toLowerCase().includes('bharati')).reduce((acc, i) => acc + (Number(i.quantity) || 0), 0) || 112000;
+
+      // Medical Plasma Vault
+      const medicalItems = inventoryList.filter(
+        i => (i.category && i.category.toLowerCase().includes('medical')) || (i.itemName && i.itemName.toLowerCase().includes('plasma'))
+      );
+      const plasmaItem = medicalItems.find(i => (i.itemName || '').toLowerCase().includes('plasma')) || medicalItems[0];
+      const medicalPlasmaUnits = plasmaItem ? (plasmaItem.quantity ?? 12) : 12;
+      const medicalThreshold = plasmaItem ? (plasmaItem.minThreshold ?? 25) : 25;
+      const isMedicalLow = medicalPlasmaUnits <= medicalThreshold;
+
+      // Asset Fleet readiness
+      const operationalAssets = assetsList.filter(a => a.status === 'Operational' || a.status === 'Active').length || dashData?.kpis?.operationalAssets || 8;
+      const totalAssets = assetsList.length || dashData?.kpis?.totalAssets || 9;
+      const assetReadinessPercent = totalAssets > 0 ? Math.round((operationalAssets / totalAssets) * 100) : 89;
+
+      // Tasks
+      const overdueTasks = tasksList.filter(t => t.status === 'Overdue').length || dashData?.kpis?.overdueTasks || 1;
+
       setData({
         kpis: {
           expeditions: expeditionsList.filter(e => e.status === 'Active').length || dashData?.kpis?.expeditions || 3,
@@ -105,12 +158,28 @@ export const DashboardPage = () => {
           alerts: alertsList.length || dashData?.kpis?.alerts || 4,
           planningExpeditions: expeditionsList.filter(e => e.status === 'Planning').length || 1,
           criticalAlerts: alertsList.filter(a => a.severity === 'Critical').length || 1,
+          inventoryItems: inventoryList.length || dashData?.kpis?.totalInventory || 14,
+          lowStockItems: lowStockItems.length || dashData?.kpis?.lowStockItems || 2,
+          fuelReservesLiters: totalFuelLiters,
+          fuelMaitri: maitriFuel,
+          fuelBharati: bharatiFuel,
+          medicalPlasmaUnits,
+          medicalThreshold,
+          isMedicalLow,
+          operationalAssets,
+          totalAssets,
+          assetReadinessPercent,
+          overdueTasks,
+          totalTasks: tasksList.length || dashData?.kpis?.totalTasks || 8,
         },
         expeditions: expeditionsList,
         bases: basesList,
         cargos: cargosList,
         incidents: incidentsList,
         alerts: alertsList,
+        inventory: inventoryList,
+        assets: assetsList,
+        tasks: tasksList,
         readinessScore: calculatedReadiness,
       });
 
@@ -135,20 +204,64 @@ export const DashboardPage = () => {
 
     const socket = getSocket();
     if (socket) {
-      const handleExpUpdate = () => {
+      const handleSync = () => {
         fetchDashboard(false);
       };
-      socket.on('expedition:updated', handleExpUpdate);
-      socket.on('expedition:created', handleExpUpdate);
-      socket.on('expedition:deleted', handleExpUpdate);
-      socket.on('dashboard:statsUpdated', handleExpUpdate);
+
+      // Multi-tab real-time socket events
+      socket.on('expedition:updated', handleSync);
+      socket.on('expedition:created', handleSync);
+      socket.on('expedition:deleted', handleSync);
+      socket.on('inventory:created', handleSync);
+      socket.on('inventory:updated', handleSync);
+      socket.on('inventory:deleted', handleSync);
+      socket.on('inventory:stockUpdated', handleSync);
+      socket.on('asset:created', handleSync);
+      socket.on('asset:updated', handleSync);
+      socket.on('asset:deleted', handleSync);
+      socket.on('personnel:created', handleSync);
+      socket.on('personnel:updated', handleSync);
+      socket.on('personnel:deleted', handleSync);
+      socket.on('personnel:movement', handleSync);
+      socket.on('cargo:created', handleSync);
+      socket.on('cargo:statusUpdated', handleSync);
+      socket.on('emergency:created', handleSync);
+      socket.on('emergency:sosDispatched', handleSync);
+      socket.on('emergency:updated', handleSync);
+      socket.on('emergency:resolved', handleSync);
+      socket.on('incident:updated', handleSync);
+      socket.on('task:created', handleSync);
+      socket.on('task:updated', handleSync);
+      socket.on('task:deleted', handleSync);
+      socket.on('dashboard:statsUpdated', handleSync);
 
       return () => {
         clearInterval(timer);
-        socket.off('expedition:updated', handleExpUpdate);
-        socket.off('expedition:created', handleExpUpdate);
-        socket.off('expedition:deleted', handleExpUpdate);
-        socket.off('dashboard:statsUpdated', handleExpUpdate);
+        socket.off('expedition:updated', handleSync);
+        socket.off('expedition:created', handleSync);
+        socket.off('expedition:deleted', handleSync);
+        socket.off('inventory:created', handleSync);
+        socket.off('inventory:updated', handleSync);
+        socket.off('inventory:deleted', handleSync);
+        socket.off('inventory:stockUpdated', handleSync);
+        socket.off('asset:created', handleSync);
+        socket.off('asset:updated', handleSync);
+        socket.off('asset:deleted', handleSync);
+        socket.off('personnel:created', handleSync);
+        socket.off('personnel:updated', handleSync);
+        socket.off('personnel:deleted', handleSync);
+        socket.off('personnel:movement', handleSync);
+        socket.off('cargo:created', handleSync);
+        socket.off('cargo:statusUpdated', handleSync);
+        socket.off('emergency:created', handleSync);
+        socket.off('emergency:sosDispatched', handleSync);
+        socket.off('emergency:updated', handleSync);
+        socket.off('emergency:resolved', handleSync);
+        socket.off('incident:updated', handleSync);
+        socket.off('task:created', handleSync);
+        socket.off('task:updated', handleSync);
+        socket.off('task:deleted', handleSync);
+        socket.off('dashboard:statsUpdated', handleSync);
       };
     }
 
@@ -304,15 +417,17 @@ export const DashboardPage = () => {
   const readinessPercent = Math.min(Math.max(data.readinessScore || 87, 0), 100);
   const strokeOffset = circumference - (circumference * readinessPercent) / 100;
 
-  // Active Incident Data
-  const activeIncident = data.incidents?.find(i => i.status === 'Responding' || i.status === 'Reported' || i.severity === 'Critical') || {
-    incidentNumber: 'INC-2026-001',
-    title: 'Catastrophic Gale & Generator #1 Overheat Alarm',
-    description: 'Sudden wind gusts of 68 knots accompanied by ambient -44°C temp caused turbine icing and tripped secondary generator at Maitri Station.',
-    severity: 'Critical',
-    status: 'Responding',
-    location: 'Maitri Station - Power Generation Bay 2',
-  };
+  // Determine single unified active emergency:
+  // Synchronized with SocketContext live pushes, EmergencyContext active incidents, and Dashboard data
+  const activeIncident = 
+    (activeEmergency && activeEmergency.status !== 'Resolved' && activeEmergency.status !== 'Closed') 
+      ? activeEmergency
+      : (activeIncidents && activeIncidents.length > 0)
+      ? (activeIncidents.find(i => i.severity === 'Critical' || i.status === 'Responding') || activeIncidents[0])
+      : (data.incidents || []).find(i => 
+          (i.status === 'Responding' || i.status === 'Reported' || i.status === 'Active' || i.status === 'Investigating' || i.severity === 'Critical') &&
+          i.status !== 'Resolved' && i.status !== 'Closed'
+        ) || null;
 
   return (
     <div className="space-y-6 pb-12 font-body text-body-md">
@@ -374,58 +489,75 @@ export const DashboardPage = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* TACTICAL EMERGENCY PROTOCOL WIDGET (Direct Action Banner) */}
+      {/* UNIFIED COMMAND EMERGENCY ALERT BAR */}
       {/* ========================================================================= */}
       {activeIncident && (
-        <div className="rounded-xl bg-gradient-to-r from-danger/20 via-danger/10 to-surface-1 border border-danger/40 p-4 shadow-[0_0_20px_rgba(255,102,120,0.15)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg bg-danger/20 border border-danger/50 flex items-center justify-center text-danger shrink-0 mt-0.5">
-              <span className="material-symbols-outlined text-xl animate-pulse">crisis_alert</span>
+        <div className="rounded-xl bg-gradient-to-r from-danger/25 via-[#1a0d17] to-surface-1 border border-danger/50 p-4 shadow-[0_0_24px_rgba(255,102,120,0.2)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in transition-all">
+          <div className="flex items-start gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-danger/20 border border-danger/50 flex items-center justify-center text-danger shrink-0 mt-0.5 shadow-[0_0_12px_rgba(255,102,120,0.25)]">
+              <span className="material-symbols-outlined text-2xl animate-pulse">crisis_alert</span>
             </div>
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-danger text-polar-950 text-[10px] font-mono font-bold tracking-wider uppercase">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-danger text-polar-950 text-[10px] font-mono font-bold tracking-wider uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-polar-950 animate-ping" />
                   ACTIVE PRIORITY EMERGENCY
                 </span>
-                <span className="font-mono text-xs font-bold text-danger">{activeIncident.incidentNumber}</span>
-                <span className="text-xs text-text-muted">• {activeIncident.location || 'Maitri Station'}</span>
+                <span className="font-mono text-xs font-bold text-danger bg-danger/10 px-2 py-0.5 rounded border border-danger/30">
+                  {activeIncident.incidentNumber || activeIncident.code || 'INC-ALERT'}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-danger/20 text-danger border border-danger/40 uppercase">
+                  {activeIncident.severity || 'Critical'}
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-surface-2 text-ice-300 border border-border-default uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+                  {activeIncident.status || 'Active'}
+                </span>
+                <span className="text-xs text-text-muted font-mono flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs text-danger">location_on</span>
+                  {activeIncident.location || activeIncident.baseName || (typeof activeIncident.base === 'object' ? activeIncident.base?.name : null) || 'Maitri Station'}
+                </span>
               </div>
-              <h3 className="text-sm font-bold text-text-primary mt-1">
+              <h3 className="text-sm sm:text-base font-bold text-text-primary tracking-tight">
                 {activeIncident.title}
               </h3>
-              <p className="text-xs text-text-secondary mt-0.5 max-w-2xl">
+              <p className="text-xs text-text-secondary mt-0.5 max-w-3xl leading-relaxed">
                 {activeIncident.description}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+          <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-danger/20">
             <button
               onClick={() => {
                 setSitrepSent(true);
                 setSyncToast('Priority SITREP broadcasted across all Polar C2 nodes!');
+                setTimeout(() => setSitrepSent(false), 8000);
                 setTimeout(() => setSyncToast(null), 4000);
               }}
-              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-default text-text-primary text-xs font-mono transition-colors cursor-pointer"
+              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-default text-text-primary text-xs font-mono transition-colors cursor-pointer active:scale-95"
+              title="Broadcast tactical status report to all stations"
             >
               <span className="material-symbols-outlined text-sm text-ice-400">send</span>
-              <span>{sitrepSent ? 'SITREP Sent ✓' : 'Dispatch SITREP'}</span>
+              <span>{sitrepSent ? 'SITREP Broadcasted ✓' : 'Dispatch SITREP'}</span>
             </button>
             <button
               onClick={() => navigate('/emergency')}
-              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg bg-danger hover:bg-danger/90 text-polar-950 font-bold text-xs font-mono shadow-[0_0_12px_rgba(255,102,120,0.3)] transition-all cursor-pointer"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-danger hover:bg-danger/90 text-polar-950 font-bold text-xs font-mono shadow-[0_0_16px_rgba(255,102,120,0.35)] hover:shadow-[0_0_20px_rgba(255,102,120,0.5)] transition-all cursor-pointer active:scale-95"
+              title="Open full incident handling in Emergency Center"
             >
               <span className="material-symbols-outlined text-sm font-bold">shield</span>
               <span>Command Protocol</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* TOP KPI ROW (4 Reactive Interactive Cards) */}
+      {/* TOP KPI ROW (5 Reactive Interactive Cards with Full Tab Sync) */}
       {/* ========================================================================= */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {/* 1. ACTIVE EXPEDITIONS */}
         <div
           onClick={() => navigate('/expeditions')}
@@ -484,8 +616,6 @@ export const DashboardPage = () => {
             <span>Bharati: <strong className="text-ice-300">44</strong></span>
             <span className="text-border-default">|</span>
             <span className="text-aurora-400">Himadri: 14</span>
-            <span className="text-border-default">|</span>
-            <span className="text-ice-200">RV: 28</span>
           </div>
         </div>
 
@@ -515,7 +645,33 @@ export const DashboardPage = () => {
           </div>
         </div>
 
-        {/* 4. ACTIVE ALERTS */}
+        {/* 4. STRATEGIC INVENTORY & RESERVES */}
+        <div
+          onClick={() => navigate('/inventory')}
+          className="relative overflow-hidden rounded-xl bg-surface-1 backdrop-blur-md border border-border-default p-4 shadow-sm hover:border-cyan-400/60 hover:shadow-[0_0_16px_rgba(40,169,245,0.2)] transition-all duration-200 group cursor-pointer"
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110" />
+          <div className="flex justify-between items-start mb-3">
+            <span className="text-xs font-mono uppercase tracking-wider text-text-muted">INVENTORY & SUPPLIES</span>
+            <div className="p-2 rounded-lg bg-surface-container border border-border-default text-cyan-400 group-hover:border-cyan-400/40">
+              <span className="material-symbols-outlined">inventory_2</span>
+            </div>
+          </div>
+          <div className="flex items-baseline gap-3 mb-2">
+            <span className="text-4xl font-bold text-text-primary font-mono leading-none">
+              {data.kpis.inventoryItems}
+            </span>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border ${data.kpis.lowStockItems > 0 ? 'bg-warning/15 text-warning border-warning/40' : 'bg-success/15 text-success border-success/40'}`}>
+              {data.kpis.lowStockItems > 0 ? `${data.kpis.lowStockItems} Low Stock` : 'Stock Nominal'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-border-default/60 text-xs text-text-secondary font-mono">
+            <span>Fuel: <strong className="text-ice-300">{Math.round((data.kpis.fuelReservesLiters || 0) / 1000)}kL</strong></span>
+            <span className="text-cyan-400 hover:text-cyan-200 underline decoration-dotted">Dossier →</span>
+          </div>
+        </div>
+
+        {/* 5. ACTIVE ALERTS */}
         <div
           onClick={() => navigate('/alerts')}
           className="relative overflow-hidden rounded-xl bg-surface-1 backdrop-blur-md border border-border-default p-4 shadow-sm hover:border-warning/60 hover:shadow-[0_0_16px_rgba(246,200,95,0.2)] transition-all duration-200 group cursor-pointer"
@@ -532,15 +688,15 @@ export const DashboardPage = () => {
               {data.kpis.alerts}
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-warning/15 text-warning border border-warning/40">
-              {data.kpis.criticalAlerts || 1} Critical, 3 Advisory
+              {data.kpis.criticalAlerts || 1} Critical
             </span>
           </div>
           <div className="flex items-center justify-between pt-2 border-t border-border-default/60 text-xs">
             <span className="text-danger flex items-center gap-1 font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-danger animate-ping" />
-              Blizzard Cat 3
+              Blizzard Watch
             </span>
-            <span className="text-ice-400 hover:text-ice-200 font-mono underline decoration-dotted">View All Center →</span>
+            <span className="text-ice-400 hover:text-ice-200 font-mono underline decoration-dotted">View Center →</span>
           </div>
         </div>
       </section>
@@ -1253,16 +1409,21 @@ export const DashboardPage = () => {
             <span className="material-symbols-outlined text-ice-400">local_gas_station</span>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-2xl font-bold font-mono text-text-primary">196,500 L</span>
+            <span className="text-2xl font-bold font-mono text-text-primary">
+              {Number(data.kpis.fuelReservesLiters || 20900).toLocaleString()} L
+            </span>
             <span className="text-xs font-mono text-ice-300">Jet A-1 & Polar Diesel</span>
           </div>
           <div className="w-full h-1.5 bg-polar-900 rounded-full overflow-hidden mb-2">
-            <div className="h-full bg-ice-400 rounded-full" style={{ width: '74%' }} />
+            <div 
+              className="h-full bg-ice-400 rounded-full transition-all duration-700" 
+              style={{ width: `${Math.min(100, Math.max(15, Math.round(((data.kpis.fuelReservesLiters || 20900) / 40000) * 100)))}%` }} 
+            />
           </div>
           <div className="flex justify-between text-[11px] font-mono text-text-secondary">
-            <span>Maitri: 84.5kL</span>
-            <span>Bharati: 112kL</span>
-            <span className="text-warning">Refill Scheduled</span>
+            <span>Maitri: {Math.round((data.kpis.fuelMaitri || 84500) / 1000)}kL</span>
+            <span>Bharati: {Math.round((data.kpis.fuelBharati || 112000) / 1000)}kL</span>
+            <span className="text-warning">Nominal Supply</span>
           </div>
         </div>
 
@@ -1276,15 +1437,24 @@ export const DashboardPage = () => {
             <span className="material-symbols-outlined text-warning">medical_services</span>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-2xl font-bold font-mono text-warning">12 Units</span>
-            <span className="text-xs font-mono text-danger">Threshold: 25 Units</span>
+            <span className="text-2xl font-bold font-mono text-warning">
+              {data.kpis.medicalPlasmaUnits ?? 12} Units
+            </span>
+            <span className={`text-xs font-mono ${data.kpis.isMedicalLow ? 'text-danger' : 'text-text-muted'}`}>
+              Threshold: {data.kpis.medicalThreshold ?? 25} Units
+            </span>
           </div>
           <div className="w-full h-1.5 bg-polar-900 rounded-full overflow-hidden mb-2">
-            <div className="h-full bg-warning rounded-full" style={{ width: '48%' }} />
+            <div 
+              className={`h-full rounded-full transition-all duration-700 ${data.kpis.isMedicalLow ? 'bg-danger' : 'bg-warning'}`} 
+              style={{ width: `${Math.min(100, Math.round(((data.kpis.medicalPlasmaUnits || 12) / (data.kpis.medicalThreshold || 25)) * 100))}%` }} 
+            />
           </div>
           <div className="flex justify-between text-[11px] font-mono text-text-secondary">
-            <span>Blood Plasma O-Neg</span>
-            <span className="text-danger font-semibold">Low-Stock Alert</span>
+            <span>Blood Plasma & Triage</span>
+            <span className={data.kpis.isMedicalLow ? 'text-danger font-semibold' : 'text-success'}>
+              {data.kpis.isMedicalLow ? 'Low-Stock Alert' : 'Nominal'}
+            </span>
           </div>
         </div>
 
@@ -1298,16 +1468,23 @@ export const DashboardPage = () => {
             <span className="material-symbols-outlined text-aurora-400">precision_manufacturing</span>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-2xl font-bold font-mono text-text-primary">8 / 9 Ready</span>
-            <span className="text-xs font-mono text-aurora-400">89% Operational</span>
+            <span className="text-2xl font-bold font-mono text-text-primary">
+              {data.kpis.operationalAssets || 8} / {data.kpis.totalAssets || 9} Ready
+            </span>
+            <span className="text-xs font-mono text-aurora-400">
+              {data.kpis.assetReadinessPercent || 89}% Operational
+            </span>
           </div>
           <div className="w-full h-1.5 bg-polar-900 rounded-full overflow-hidden mb-2">
-            <div className="h-full bg-aurora-400 rounded-full" style={{ width: '89%' }} />
+            <div 
+              className="h-full bg-aurora-400 rounded-full transition-all duration-700" 
+              style={{ width: `${data.kpis.assetReadinessPercent || 89}%` }} 
+            />
           </div>
           <div className="flex justify-between text-[11px] font-mono text-text-secondary">
-            <span>PistenBully PB300: 4</span>
-            <span>Hägglunds BV206: 3</span>
-            <span className="text-text-muted">Gen #1 Maint</span>
+            <span>Active: {data.kpis.operationalAssets || 8}</span>
+            <span>Standby: {Math.max(0, (data.kpis.totalAssets || 9) - (data.kpis.operationalAssets || 8))}</span>
+            <span className="text-aurora-400">C2 Fleet Synced</span>
           </div>
         </div>
       </section>

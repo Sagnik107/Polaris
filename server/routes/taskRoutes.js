@@ -3,6 +3,7 @@ const { requireAuth } = require('../middleware/authMiddleware');
 const { requirePermission } = require('../middleware/roleMiddleware');
 const {
   getTasks,
+  getTaskStats,
   getTask,
   createTask,
   updateTask,
@@ -12,6 +13,7 @@ const {
 const router = express.Router();
 
 router.get('/', requireAuth, getTasks);
+router.get('/stats', requireAuth, getTaskStats);
 router.get('/:id', requireAuth, getTask);
 router.post('/', requireAuth, requirePermission('tasks:create'), createTask);
 router.put('/:id', requireAuth, requirePermission('tasks:update'), updateTask);

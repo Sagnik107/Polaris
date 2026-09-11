@@ -9,7 +9,7 @@ const { mockTasks } = require('../services/mockDataService');
 const mockTaskActivities = [
   {
     _id: 'act-001',
-    actorName: 'Commander Sarah Jenkins',
+    actorName: 'Commander Radhika Roy',
     action: 'TASK_CREATED',
     entityType: 'Task',
     entityId: '67cda7000000000000000001',
@@ -44,6 +44,46 @@ const mockTaskActivities = [
     createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
   },
 ];
+
+const getTaskStats = async (req, res, next) => {
+  try {
+    await autoDetectOverdue();
+    let tasksList = [];
+    if (require('mongoose').connection.readyState !== 1) {
+      tasksList = mockTasks;
+    } else {
+      tasksList = await Task.find({}).lean();
+    }
+
+    const total = tasksList.length;
+    const pending = tasksList.filter(t => t.status === 'Pending' || t.status === 'Todo' || t.status === 'Assigned').length;
+    const inProgress = tasksList.filter(t => (t.status === 'In Progress' || t.status === 'InProgress') && (t.status !== 'Overdue')).length;
+    const overdue = tasksList.filter(t => {
+      if (t.status === 'Completed') return false;
+      if (t.status === 'Overdue') return true;
+      const d = t.deadline || t.dueDate;
+      return d ? new Date(d) < new Date() : false;
+    }).length;
+    const completed = tasksList.filter(t => t.status === 'Completed').length;
+    const critical = tasksList.filter(t => t.priority === 'Critical').length;
+    const high = tasksList.filter(t => t.priority === 'High').length;
+
+    res.json({
+      success: true,
+      data: {
+        total,
+        pending,
+        inProgress,
+        overdue,
+        completed,
+        critical,
+        high,
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Helper: Auto-detect and transition overdue tasks
 const autoDetectOverdue = async () => {
@@ -487,5 +527,5 @@ const deleteTask = async (req, res, next) => {
   }
 };
 
-module.exports = { getTasks, getTask, createTask, updateTask, deleteTask };
+module.exports = { getTasks, getTaskStats, getTask, createTask, updateTask, deleteTask };
 

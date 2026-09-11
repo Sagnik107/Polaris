@@ -23,6 +23,7 @@ import {
   Calendar,
   X,
   AlertTriangle,
+  Edit3,
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -47,14 +48,18 @@ export const TasksPage = () => {
   const [expeditionsList, setExpeditionsList] = useState([]);
   const [basesList, setBasesList] = useState([]);
 
-  // Filters
+  // Filters & Sorting
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [assigneeFilter, setAssigneeFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('deadline-asc');
 
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -66,7 +71,7 @@ export const TasksPage = () => {
     title: '',
     description: '',
     priority: 'Medium',
-    deadline: new Date(Date.now() + 24 * 3600 * 1000).toISOString().split('T')[0],
+    deadline: new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 16),
     assignedTo: '',
     expedition: '',
     base: '',
@@ -164,7 +169,7 @@ export const TasksPage = () => {
           title: '',
           description: '',
           priority: 'Medium',
-          deadline: new Date(Date.now() + 24 * 3600 * 1000).toISOString().split('T')[0],
+          deadline: new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 16),
           assignedTo: '',
           expedition: '',
           base: '',
@@ -174,6 +179,74 @@ export const TasksPage = () => {
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to create task');
+    }
+  };
+
+  // Open Edit Task modal
+  const openEditModal = (task) => {
+    const rawDeadline = task.deadline || task.dueDate;
+    let formattedDeadline = '';
+    if (rawDeadline) {
+      try {
+        formattedDeadline = new Date(rawDeadline).toISOString().slice(0, 16);
+      } catch (e) {
+        formattedDeadline = rawDeadline;
+      }
+    } else {
+      formattedDeadline = new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 16);
+    }
+
+    setTaskToEdit({
+      _id: task._id,
+      title: task.title || '',
+      description: task.description || '',
+      priority: task.priority || 'Medium',
+      deadline: formattedDeadline,
+      assignedTo: typeof task.assignedTo === 'object' ? task.assignedTo?._id : (task.assignedTo || ''),
+      expedition: typeof task.expedition === 'object' ? task.expedition?._id : (task.expedition || ''),
+      base: typeof task.base === 'object' ? task.base?._id : (task.base || ''),
+      status: task.status || 'Pending',
+    });
+    setIsEditModalOpen(true);
+  };
+
+  // Submit Task Edit
+  const handleUpdateTask = async (e) => {
+    e.preventDefault();
+    if (!canUpdate || !taskToEdit) {
+      alert('Access restricted: Insufficient permissions to modify task directives.');
+      return;
+    }
+
+    try {
+      setIsSubmittingEdit(true);
+      const selectedPerson = personnelList.find((p) => p._id === taskToEdit.assignedTo);
+
+      const payload = {
+        title: taskToEdit.title.trim(),
+        description: taskToEdit.description.trim(),
+        priority: taskToEdit.priority,
+        deadline: taskToEdit.deadline,
+        status: taskToEdit.status,
+        assignedTo: taskToEdit.assignedTo || null,
+        assignedToName: selectedPerson ? selectedPerson.name : '',
+        expedition: taskToEdit.expedition || null,
+        base: taskToEdit.base || null,
+      };
+
+      const res = await api.put(`/tasks/${taskToEdit._id}`, payload);
+      if (res.data?.success) {
+        setIsEditModalOpen(false);
+        setTaskToEdit(null);
+        fetchTasks();
+        if (selectedTask && selectedTask._id === taskToEdit._id) {
+          openTaskDetail(res.data.data);
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update task directive');
+    } finally {
+      setIsSubmittingEdit(false);
     }
   };
 
@@ -352,7 +425,33 @@ export const TasksPage = () => {
 
       return true;
     });
-  }, [tasks, searchQuery, statusFilter, priorityFilter, assigneeFilter]);
+
+    // Sort order
+    const priorityWeights = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'deadline-asc') {
+        const da = new Date(a.deadline || a.dueDate || 0);
+        const db = new Date(b.deadline || b.dueDate || 0);
+        return da - db;
+      }
+      if (sortBy === 'deadline-desc') {
+        const da = new Date(a.deadline || a.dueDate || 0);
+        const db = new Date(b.deadline || b.dueDate || 0);
+        return db - da;
+      }
+      if (sortBy === 'priority-desc') {
+        return (priorityWeights[b.priority] || 0) - (priorityWeights[a.priority] || 0);
+      }
+      if (sortBy === 'priority-asc') {
+        return (priorityWeights[a.priority] || 0) - (priorityWeights[b.priority] || 0);
+      }
+      if (sortBy === 'title-asc') {
+        return (a.title || '').localeCompare(b.title || '');
+      }
+      return 0;
+    });
+  }, [tasks, searchQuery, statusFilter, priorityFilter, assigneeFilter, sortBy]);
 
   // Unique assignee names for filter dropdown
   const uniqueAssignees = useMemo(() => {
@@ -458,7 +557,7 @@ export const TasksPage = () => {
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs font-mono uppercase tracking-wider transition-all shadow-lg shadow-sky-500/20 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Assign New Task</span>
+              <span>Add Task</span>
             </button>
           ) : (
             <span
@@ -618,13 +717,30 @@ export const TasksPage = () => {
             </select>
           </div>
 
-          {(searchQuery || statusFilter !== 'All' || priorityFilter !== 'All' || assigneeFilter !== 'All') && (
+          {/* Sort control */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500 text-[11px]">Sort:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:border-sky-500 focus:outline-none"
+            >
+              <option value="deadline-asc">Deadline (Earliest)</option>
+              <option value="deadline-desc">Deadline (Latest)</option>
+              <option value="priority-desc">Priority (Highest)</option>
+              <option value="priority-asc">Priority (Lowest)</option>
+              <option value="title-asc">Title (A-Z)</option>
+            </select>
+          </div>
+
+          {(searchQuery || statusFilter !== 'All' || priorityFilter !== 'All' || assigneeFilter !== 'All' || sortBy !== 'deadline-asc') && (
             <button
               onClick={() => {
                 setSearchQuery('');
                 setStatusFilter('All');
                 setPriorityFilter('All');
                 setAssigneeFilter('All');
+                setSortBy('deadline-asc');
               }}
               className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-xs flex items-center gap-1 transition-colors cursor-pointer"
             >
@@ -762,13 +878,25 @@ export const TasksPage = () => {
 
                           {/* Action Footer */}
                           <div className="mt-3 pt-2 border-t border-slate-850 flex items-center justify-between gap-2">
-                            <button
-                              onClick={() => openTaskDetail(t)}
-                              className="text-[10px] font-mono px-2 py-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
-                            >
-                              <History className="w-3 h-3" />
-                              <span>Details & Notes</span>
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => openTaskDetail(t)}
+                                className="text-[10px] font-mono px-2 py-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                <History className="w-3 h-3" />
+                                <span>Inspect</span>
+                              </button>
+                              {canUpdate && (
+                                <button
+                                  onClick={() => openEditModal(t)}
+                                  className="text-[10px] font-mono px-2 py-1 rounded text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
+                                  title="Edit Task Directive"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                  <span>Edit</span>
+                                </button>
+                              )}
+                            </div>
 
                             <div className="flex items-center gap-1.5">
                               {/* Workflow transition buttons */}
@@ -904,6 +1032,14 @@ export const TasksPage = () => {
                             >
                               Inspect
                             </button>
+                            {canUpdate && (
+                              <button
+                                onClick={() => openEditModal(t)}
+                                className="px-2 py-1 rounded text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                              >
+                                Edit
+                              </button>
+                            )}
                             {canUpdate && (t.status === 'Pending' || t.status === 'Todo') && (
                               <button
                                 onClick={() => handleStatusChange(t._id, 'In Progress')}
@@ -986,10 +1122,10 @@ export const TasksPage = () => {
 
             <div>
               <label className="block text-slate-300 mb-1 font-semibold">
-                Deadline Date <span className="text-rose-400">*</span>
+                Due Date & Time <span className="text-rose-400">*</span>
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 required
                 value={newTask.deadline}
                 onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
@@ -1073,10 +1209,167 @@ export const TasksPage = () => {
               type="submit"
               className="px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold uppercase transition-all shadow-lg shadow-sky-500/20 cursor-pointer"
             >
-              Issue Directive
+              Save & Issue Directive
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* EDIT TASK MODAL */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setTaskToEdit(null);
+        }}
+        title="Edit Operational Task Directive"
+        maxWidth="max-w-2xl"
+      >
+        {taskToEdit && (
+          <form onSubmit={handleUpdateTask} className="space-y-4 font-mono text-xs">
+            <div>
+              <label className="block text-slate-300 mb-1 font-semibold">
+                Task Directive Title <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={taskToEdit.title}
+                onChange={(e) => setTaskToEdit({ ...taskToEdit, title: e.target.value })}
+                placeholder="Directive Title..."
+                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-sky-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-300 mb-1 font-semibold">
+                Operational Instructions & Checklists <span className="text-rose-400">*</span>
+              </label>
+              <textarea
+                rows={3}
+                required
+                value={taskToEdit.description}
+                onChange={(e) => setTaskToEdit({ ...taskToEdit, description: e.target.value })}
+                placeholder="Instructions..."
+                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:border-sky-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">Priority Level</label>
+                <select
+                  value={taskToEdit.priority}
+                  onChange={(e) => setTaskToEdit({ ...taskToEdit, priority: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="Critical">Critical (Immediate Hazard)</option>
+                  <option value="High">High Priority</option>
+                  <option value="Medium">Medium Priority</option>
+                  <option value="Low">Low / Routine</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">
+                  Due Date & Time <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={taskToEdit.deadline}
+                  onChange={(e) => setTaskToEdit({ ...taskToEdit, deadline: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-sky-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">Workflow Status</label>
+                <select
+                  value={taskToEdit.status}
+                  onChange={(e) => setTaskToEdit({ ...taskToEdit, status: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Overdue">Overdue</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">Assign Operator</label>
+                <select
+                  value={taskToEdit.assignedTo}
+                  onChange={(e) => setTaskToEdit({ ...taskToEdit, assignedTo: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="">Unassigned (General Crew)</option>
+                  {personnelList.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} {p.designation ? `(${p.designation})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">Link to Expedition</label>
+                <select
+                  value={taskToEdit.expedition}
+                  onChange={(e) => setTaskToEdit({ ...taskToEdit, expedition: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="">None (Station Base Task)</option>
+                  {expeditionsList.map((exp) => (
+                    <option key={exp._id} value={exp._id}>
+                      {exp.expeditionCode ? `[${exp.expeditionCode}] ` : ''}
+                      {exp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 mb-1 font-semibold">Base Outpost</label>
+                <select
+                  value={taskToEdit.base}
+                  onChange={(e) => setTaskToEdit({ ...taskToEdit, base: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="">None / Remote Field</option>
+                  {basesList.map((b) => (
+                    <option key={b._id} value={b._id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setTaskToEdit(null);
+                }}
+                className="px-4 py-2 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingEdit}
+                className="px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-bold uppercase transition-all shadow-lg shadow-sky-500/20 cursor-pointer"
+              >
+                {isSubmittingEdit ? 'Saving Changes...' : 'Save Directive Changes'}
+              </button>
+            </div>
+          </form>
+        )}
       </Modal>
 
       {/* TASK DETAILS & ACTIVITY TIMELINE MODAL */}
@@ -1142,6 +1435,15 @@ export const TasksPage = () => {
                         <span>Reopen Task</span>
                       </button>
                     )}
+
+                    <button
+                      onClick={() => openEditModal(selectedTask)}
+                      className="px-2.5 py-1 rounded bg-slate-800 text-sky-300 border border-slate-700 hover:bg-slate-700 flex items-center gap-1 transition-all cursor-pointer"
+                      title="Edit Directive Details"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
                   </div>
                 )}
               </div>
